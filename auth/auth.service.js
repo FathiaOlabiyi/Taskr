@@ -15,7 +15,7 @@ const signUp = async({firstname, lastname, username, email, password, profilePic
     };
 
     const createUser = await Model.create({firstname, lastname, username, email, password, profilePicture, authProvider: "manual"});
-    // await utils.verifyEmail(createUser);
+    await utils.verifyEmail(createUser);
     const jwtToken = generateToken(createUser._id);
     return {createUser, jwtToken};
 };
@@ -150,7 +150,7 @@ const resetPassword = async({email, token}, {newPassword}) => {
   return resetPassword;
 };
 
-deleteAccount = async(userId) => {
+const deleteAccount = async(userId) => {
     const user = await Model.findById(userId);
 
     if(!user) {

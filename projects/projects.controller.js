@@ -1,12 +1,19 @@
 const Services = require("./projects.service");
+const {createProjectJoi, updateProjectJoi, updateStatusJoi} = require("./projects.middleware");
 
-
+//when you are done creating members and invitations, make sure to test these endpoints again, do not forget testing them when a project has been deleted
 const createProject = async(req, res) => {
     try {
         const ownerId = req.user.id;
-        const payload = req.body;
-            
-        const response = await Services.createProject({ownerId, title: payload.title, description: payload.description, status: payload.status, dueDate: payload.dueDate, startedAt: payload.startedAt});
+        const {value, error} = createProjectJoi.validate(req.body);
+
+        if(error) {
+            return res.status(400).json({
+                message: error.message
+            });
+        };
+        
+        const response = await Services.createProject(ownerId, value);
         return res.status(201).json({
             message: "Project created successfully",
             data: response
@@ -22,21 +29,151 @@ const createProject = async(req, res) => {
             message: "Internal server error",
             error: err.message
         });
-        console.log(req.user);
     };
 };
 
 const getAllProjects = async(req, res) => {
     try {
-        const userId = req.user.id
-        const response = await Services.getAllProjects({userId});
+        const userId = req.user.id;
+        const query = req.query;
+
+        const response = await Services.getAllProjects(userId, query.status, query.type, query.title);
         return res.status(200).json({message: "Projects returned successfully", data: response})
     }catch(err) {
-        res.status(500).json({error: err.message})
+        res.status(500).json({message: "Internal server error", error: err.message});
+        console.log(err);
     };
 };
 
+const getProjectById = async(req, res) => {
+    try {
+        const id = req.params.id;
+
+        const response = await Services.getProjectById(id);
+        return res.status(200).json({
+            message: "Project returned successfully",
+            data: response
+        });
+    }catch(err) {
+        if(err && err.message.includes("not found")) {
+            return res.status(404).json({
+                message: err.message
+            });
+        };
+
+        res.status(500).json({
+            message: "Internal server error",
+            error: err.message
+        });
+    }
+};
+
+const updateProject = async(req, res) => {
+   try { 
+        const id = req.params.id;
+        const {value, error} = updateProjectJoi.validate(req.body);
+        
+        if (error) {
+          return res.status(400).json({
+            message: error.message,
+          });
+        }
+    
+        const response = await Services.updateProject(id, value);
+        return res.status(201).json({
+            message: "Update successful",
+            data: response
+        });
+
+    }catch(err) {
+      if (err && [err.message.includes("exists") || err.message.includes("updated")]) {
+        return res.status(409).json({
+          message: err.message,
+        });
+      }
+
+      if (err && err.message.includes("not found")) {
+        return res.status(404).json({
+          message: err.message,
+        });
+      }
+      res
+        .status(500)
+        .json({ message: "Internal server error", error: err.message });
+    };
+};
+
+const updateStatus = async(req, res) => {
+    try{
+        const id = req.params.id;
+        const {value, error} = updateStatusJoi.validate(req.body);
+
+        if(error) {
+            return res.status(400).json({
+                message: error.message
+            });
+        }
+
+        const response = await Services.updateStatus(id, value);
+        return res.status(201).json({
+            message: "Update successful",
+            data: response
+        });
+    }catch(err) {
+        if (err && err.message.includes("not found")) {
+            return res.status(404).json({
+            message: err.message,
+            });
+        };
+
+        if (
+          err && [
+            err.message.includes("state") ||
+              err.message.includes("member") ||
+              err.message.includes("task") ||
+              err.message.includes("date") ||
+              err.message.includes("completed") ||
+              err.message.includes("allowed"),
+          ]
+        ) {
+          return res.status(409).json({
+            message: err.message,
+          });
+        };
+
+        res.status(500).json({
+            message: "Internal server error",
+            error: err.message
+        });
+    }
+
+};
+
+const deleteProject = async(req, res) => {
+    const id = req.params.id;
+    try {
+        const response = await Services.deleteProject(id);
+        res.status(200).json({
+            message: "Project deleted successfully"
+        });
+    }catch(err){
+        if(err && err.message.includes("not found")) {
+            return res.status(404).json({
+                message: err.message
+            });
+        }
+        res.status(500).json({
+            message: "Internal server error",
+            error: err.message
+        });
+    };
+}
+
 module.exports = {
     createProject,
-    getAllProjects
+    getAllProjects,
+    getProjectById,
+    updateProject,
+    updateStatus,
+    deleteProject
 };

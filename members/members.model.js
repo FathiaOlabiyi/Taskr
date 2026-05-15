@@ -17,16 +17,15 @@ const Schema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Member"
   },
-  //make addedBy compulsory with joi
 
+  role: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Role",
+  },
+  
   deletedAt: {
     type: Date,
-  },
-
-  deletedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Member",
-  },
+  }
 }, {
     timestamps: true
 });

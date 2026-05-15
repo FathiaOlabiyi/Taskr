@@ -4,7 +4,7 @@ const permissionModel = require("./permissions.model");
 const mongoose = require("mongoose");
 
 
-const createRolePermission = async(roleId, {role, permission}) => {
+const createRolePermission = async(roleId, permission) => {
   const findRole = await roleModel.findById(roleId);
 
   if (!findRole) {
@@ -16,7 +16,7 @@ const createRolePermission = async(roleId, {role, permission}) => {
   };
 
   if(!mongoose.Types.ObjectId.isValid(permission)) {
-    throw new Error("PermissionID is invalid")
+    throw new Error("PermissionID format is invalid")
   };
 
   const findPermission = await permissionModel.findById(permission);
@@ -40,7 +40,6 @@ const createRolePermission = async(roleId, {role, permission}) => {
     role: roleId,
     permission: permission,
   });
-  console.log(rolePermission);
 
   return rolePermission;
 };

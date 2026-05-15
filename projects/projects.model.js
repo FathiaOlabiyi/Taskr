@@ -23,19 +23,37 @@ const Schema = new mongoose.Schema(
 
         status: {
             type: String,
-            enum: ["planning", "active", "on_hold", "completed", "archived"],
+            enum: ["planning", "active", "on_hold", "completed"],
             default: "planning"
         },
 
+        blocker: {
+            type: String,
+            enum: ["resource-unavailable", "technical-issue", "requirement-unclear", "external-approval", "dependency"],
+            default: null
+        },
+
+        expectedResumeDate: {
+            type: Date,
+            default: null
+        },
+
         dueDate: {
-            type: Date
+            type: Date,
+            default: null
         },
         startedAt: {
-            type: Date
+            type: Date,
+            default: null
         },
         deletedAt: {
-            type: Date
+            type: Date,
+            default: null
         },
+        completedAt: {
+            type: Date,
+            default: null
+        }
 }, {
     timestamps: true
 });

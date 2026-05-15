@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "agenda": "^6.2.4",
     "bcrypt": "^6.0.0",
     "crypto": "^1.0.1",
     "dotenv": "^17.2.3",
@@ -18,9 +19,11 @@
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.1",
+    "morgan": "^1.10.1",
     "nodemailer": "^7.0.12",
     "passport": "^0.7.0",
     "passport-google-oauth2": "^0.2.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "winston": "^3.19.0"
   }
 }

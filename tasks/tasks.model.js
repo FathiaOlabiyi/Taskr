@@ -1,69 +1,94 @@
 const mongoose = require("mongoose");
 
-const Schema = new mongoose.Schema({
-  projectId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Project",
-    required: true,
-  },
+const Schema = new mongoose.Schema(
+  {
+    projectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Project",
+      required: true,
+    },
 
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Member",
-    required: true,
-  },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Member",
+      required: true,
+    },
 
-  title: {
-    type: String,
-    required: true,
-    unique: true,
-  },
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Member",
+      default: null
+    },
 
-  description: {
-    type: String,
-    minLength: 10,
-    maxLength: 200,
-  },
+    title: {
+      type: String,
+      required: true,
+      unique: true,
+    },
 
-  status: {
-    type: String,
-    enum: ["todo", "in-progress", "on-hold", "review", "completed"],
-    default: "todo",
-  },
+    description: {
+      type: String,
+      minLength: 10,
+      maxLength: 200,
+    },
 
-  prority: {
-    type: String,
-    enum: ["low", "medium", "high", "urgent"],
-    default: "medium",
-  },
+    status: {
+      type: String,
+      enum: ["todo", "in-progress", "on-hold", "review", "completed"],
+      default: "todo",
+    },
 
-  dueDate: {
-    type: Date,
-  },
+    blocker: {
+      type: String,
+      enum: [
+        "resource-unavailable",
+        "technical-issue",
+        "requirement-unclear",
+        "dependency",
+      ],
+      default: null,
+    },
 
-  startedAt: {
-    type: Date,
-  },
+    expectedResumeDate: {
+      type: Date,
+      default: null,
+    },
 
-  completedAt: {
-    type: Date,
-  },
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high", "urgent"],
+      default: "medium",
+    },
 
-  updatedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Member",
-  },
+    dueDate: {
+      type: Date,
+    },
 
-  deletedAt: {
-    type: Date,
-  },
+    startedAt: {
+      type: Date,
+    },
 
-  deletedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Member"
+    completedAt: {
+      type: Date,
+    },
+
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Member",
+    },
+
+    deletedAt: {
+      type: Date,
+    },
+
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Member",
+    },
   },
-}, {
-    timestamps: true
-});
+  {
+    timestamps: true,
+  },
+);
 
 module.exports = mongoose.model("Task", Schema);

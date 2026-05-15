@@ -54,9 +54,8 @@ const verifyUserEmail = async(req, res) => {
                 error: err.message
             });
         }
-
         if(err && err.message.includes("already verified")) {
-            return res.json({
+            return res.status(409).json({
                 error: err.message
             });
         }

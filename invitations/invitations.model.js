@@ -10,11 +10,11 @@ const Schema = new mongoose.Schema(
 
     roleId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Task",
+      ref: "Role",
       required: true
     },
 
-    invitedEmail: {
+    inviteeEmail: {
         type: String,
         required: true
     },
@@ -27,7 +27,8 @@ const Schema = new mongoose.Schema(
 
     status: {
         type: String,
-        enum: ["draft", "sent", "pending", "expired", "accepted", "rejected", "revoked"]
+        enum: ["draft", "scheduled", "pending", "expired", "accepted", "rejected", "revoked"],
+        default: "draft"
     },
 
     token: {
@@ -53,12 +54,7 @@ const Schema = new mongoose.Schema(
 
     deletedAt: {
       type: Date,
-    },
-
-    deletedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Member",
-    },
+    }
   },
   {
     timestamps: true,

@@ -15,13 +15,14 @@ app.get("/homepage", (req, res) => {
 
 // admin routes
 const rolesRoute = require("./Admin/roles.route");
-app.use("/api/v1/admin/role", rolesRoute);
+const rolePermissionRoute = require("./Admin/role-permission.route");
+app.use("/api/v1/admin/role", rolesRoute, rolePermissionRoute);
 
 const permissionRoute = require("./Admin/permissions.route");
 app.use("/api/v1/admin/permission", permissionRoute);
 
-const rolePermissionRoute = require("./Admin/role-permission.route");
-app.use("/api/v1/admin/role", rolePermissionRoute);
+
+// app.use("/api/v1/admin/role", rolePermissionRoute);
 
 
 //User routes
@@ -32,8 +33,7 @@ app.use("/api/v1/auth", authRoute);
 
 //Project and co. routes
 const projectRoute = require("./projects/projects.route");
-app.use("/api/v1", projectRoute);
-
-
+const taskRoute = require("./tasks/tasks.route");
+app.use("/api/v1/project", projectRoute, taskRoute);
 
 module.exports = app;

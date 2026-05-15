@@ -51,19 +51,24 @@ const Schema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
     isVerified: {
       type: Boolean,
       default: false,
     },
+
     verificationToken: {
       type: String,
     },
+
     verificationTokenExpiredAt: {
       type: Date,
     },
+
     passwordResetToken: {
       type: String,
     },
+    
     passwordResetTokenExpiredAt: {
       type: Date,
     },

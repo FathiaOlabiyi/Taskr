@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
-const nodemailer = require("../nodemailer");
+const nodemailer = require("../utils/nodemailer");
 require("dotenv").config();
 
 const generateToken = (bytes = 32) => {

@@ -1,24 +1,18 @@
 const Service = require("./role-permission.service");
-const joiSchema = require("./role-permission.middleware");
 const mongoose = require("mongoose");
 
 const createRolePermission = async(req, res) => {
     const roleId = req.params.roleId;
-    const {value, error} = joiSchema.joiSchema.validate(req.body);
-    try{
-        if(error) {
-            return res.status(400).json({
-                error: error.message
-            });
-        };
 
+    const payload = req.body;
+    try{
         if (!mongoose.Types.ObjectId.isValid(roleId)) {
             return res.status(400).json({
                 message: "Invalid RoleID format"
             });
         }
 
-        const response = await Service.createRolePermission(roleId, value);
+        const response = await Service.createRolePermission(roleId, payload.permission);
         res.status(201).json({
             message: "Permission applied to role successfully",
             data: response
