@@ -4,12 +4,15 @@ const taskModel = require("../tasks/tasks.model");
 const roleModel = require("../Admin/roles.model");
 const mongoose = require("mongoose");
 let session;
+const logger = require("../logger/winston");
 
-const createProject = async(ownerId, title, description, dueDate) => {
+//DO NOT FORGET BUINESS LOGIC LOGGING FOR EACH AND EVERY ONE OF THESE ENDPOINTS
+
+const createProject = async(ownerId, {title, description, dueDate}) => {
   const existingProject = await Model.findOne({ title });
 
   if (existingProject) {
-    throw new Error(`Project with title ${existingProject.title} exists`);
+    throw new Error(`Project with title " ${existingProject.title} " exists`);
   };
 
   session = await mongoose.startSession();
@@ -20,8 +23,7 @@ const createProject = async(ownerId, title, description, dueDate) => {
       { session },
     );
 
-    console.log(`StartedAt: ${startedAt}`);
-    const getRole = await roleModel.find({name: "Owner"});
+    const getRole = await roleModel.findOne({name: "Owner"});
     const roleId = getRole._id;
 
     const addMember = await memberModel.create(
@@ -55,12 +57,12 @@ const getAllProjects = async(userId, status, type, title)  => {
     populate.match.status = query.status;
   };
 
-  if(type == "mine") {
+  if(type === "mine") {
     query.type = type
     populate.match.ownerId = userId;
   };
 
-  if(type == "member") {
+  if(type === "member") {
     query.type = type
     populate.match.ownerId = { $ne: userId };
   };
@@ -82,24 +84,22 @@ const getAllProjects = async(userId, status, type, title)  => {
 const getProjectById = async(projectId) => {
    const getProject = await Model.findById(projectId);
 
-  if(!getProject ||getProject.deletedAt != null) {
+  if(!getProject ||getProject.deletedAt !== null) {
     throw new Error("Project not found")
   };
   return getProject;
 
 };
 
-
-// give this a different joi validation
-const updateProject = async(projectId, title, description, dueDate) => {
+const updateProject = async(projectId, {title, description, dueDate}) => {
   const updateProject = await Model.findById(projectId);
 
 
-  if(!updateProject || updateProject.deletedAt != null ) {
+  if(!updateProject || updateProject.deletedAt !== null ) {
     throw new Error("Project not found")
   };
 
-  if(updateProject.status == "completed") {
+  if(updateProject.status === "completed") {
     throw new Error("Project cannot be updated")
   };
 
@@ -121,11 +121,10 @@ const updateProject = async(projectId, title, description, dueDate) => {
   }
 
   await updateProject.save();
+  return updateProject;
 };
 
-//create a joi validation for this
-const updateStatus = async(projectId, status, blocker, expectedResumeDate) => {
-
+const updateStatus = async(projectId, {status, blocker, expectedResumeDate}) => {
   const fetchProject = await Model.findById(projectId);
   const fetchStatus = fetchProject.status;
   const checkMember = await memberModel.find({projectId});
@@ -135,19 +134,18 @@ const updateStatus = async(projectId, status, blocker, expectedResumeDate) => {
     projectId,
     status: { $ne: "completed" },
   });
-  console.log(checkMember);
-  console.log(checkTask)
 
   if(!fetchProject || fetchProject.deletedAt !== null) {
     throw new Error("Project not found")
   };
 
-  if(status == fetchStatus) {
+  if(status === fetchStatus) {
     throw new Error("Project is already in this state")
   };
 
   //planning to active
-  if(fetchStatus == "planning" && status == "active") {
+  if(fetchStatus === "planning" && status === "active") {
+
     if(checkMember.length < 2) {
       throw new Error("Project has to have more than 1 member");
     };
@@ -156,7 +154,7 @@ const updateStatus = async(projectId, status, blocker, expectedResumeDate) => {
       throw new Error("Project must have at least 1 task");
     };
 
-    if(fetchProject.dueDate == null) {
+    if(fetchProject.dueDate === null) {
       throw new Error("Project must have a due date");
     };
 
@@ -165,20 +163,20 @@ const updateStatus = async(projectId, status, blocker, expectedResumeDate) => {
   }
 
   //active to on-hold
-   else if(fetchStatus == "active" && status == "on-hold") {
+   else if(fetchStatus === "active" && status === "on-hold") {
     fetchProject.blocker = blocker;
     fetchProject.expectedResumeDate = expectedResumeDate;
     fetchStatus = status;
    }
 
    //on-hold to active
-   else if(fetchStatus == "on-hold" && status == "active") {
+   else if(fetchStatus === "on-hold" && status === "active") {
     fetchProject.blocker = null
     fetchStatus = status;
    }
 
    //active to completed
-   else if(fetchStatus == "active" && status == "completed") {
+   else if(fetchStatus === "active" && status === "completed") {
     if(completeTask) {
       throw new Error("All task must be completed")
     };
@@ -189,6 +187,7 @@ const updateStatus = async(projectId, status, blocker, expectedResumeDate) => {
     throw new Error("Not allowed")
    };
   await fetchProject.save();
+  return fetchProject;
 };
 
 const deleteProject = async(projectId) => {
@@ -196,7 +195,7 @@ const deleteProject = async(projectId) => {
   await session.withTransaction(async () => {
 
       const deleteProject = await Model.findById(projectId, null, {session});
-      if (deleteProject.deletedAt != null) {
+      if (deleteProject.deletedAt !== null) {
         throw new Error("Project not found");
       };
 

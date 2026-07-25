@@ -6,10 +6,14 @@ require("dotenv").config();
 
 const generateToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: "1d"});
-}
+};
 
 const signUp = async({firstname, lastname, username, email, password, profilePicture}) => {
     const existingUser = await Model.findOne({email});
+    if(existingUser && existingUser.isDeleted == true) {
+      throw new Error("User account exists but deleted, retrive to continue")
+    };
+
     if(existingUser) {
         throw new Error(`User with email ${email} already exists`);
     };
@@ -21,7 +25,7 @@ const signUp = async({firstname, lastname, username, email, password, profilePic
 };
 
 const verifyUserEmail = async(email, token) => {
-  const user = await Model.findOne({ email });
+  const user = await Model.findOne({email: email, isDeleted: false});
 
   if (!user || user.isDeleted == true) {
     throw new Error("User not found");
@@ -56,7 +60,7 @@ const verifyUserEmail = async(email, token) => {
 };
 
 const resendEmailVerificationLink = async({email}) => {
-  const user = await Model.findOne({ email });
+  const user = await Model.findOne({email: email, isDeleted: false});
 
   if (!user || user.isDeleted == true) {
     throw new Error("User not found");
@@ -66,12 +70,11 @@ const resendEmailVerificationLink = async({email}) => {
     throw new Error("User already verified");
   }
 
-  //add rate limiting here
   await utils.verifyEmail(user);
 };
 
 const signIn = async({email, password}) => {
-    const user = await Model.findOne({email});
+    const user = await Model.findOne({email: email, isDeleted: false});
 
     if(!user || user.isDeleted == true) {
         throw new Error("User not found");
@@ -97,16 +100,16 @@ const signIn = async({email, password}) => {
 };
 
 const forgotPassword = async({email}) => {
-  const user = await Model.findOne({ email });
+  const user = await Model.findOne({email: email, isDeleted: false});
+
+  if(!user || user.isDeleted == true) {
+    throw new Error("User not found")
+  };
 
   if (!user.password || user.authProvider == "google") {
     throw new Error(
       "This account was created with Google.",
     );
-  }
-
-  if (!user || user.isDeleted == true) {
-    throw new Error("User not found");
   }
 
   if (user.isVerified == false) {
@@ -117,12 +120,20 @@ const forgotPassword = async({email}) => {
 };
 
 const resetPassword = async({email, token}, {newPassword}) => {
-  const user = await Model.findOne({ email });
+  const user = await Model.findOne({email: email, isDeleted: false});
 
   if (!user || user.isDeleted == true) {
     throw new Error("User not found");
   }
+  
+  if (!user.password || user.authProvider == "google") {
+    throw new Error("This account was created with Google.");
+  }
 
+  if (!user.passwordResetToken) {
+    throw new Error("Invalid Token");
+  }
+  
   if (
     !user.passwordResetTokenExpiredAt ||
     Date.now() > user.passwordResetTokenExpiredAt
@@ -130,9 +141,7 @@ const resetPassword = async({email, token}, {newPassword}) => {
     throw new Error("Token expired");
   }
 
-  if (!user.passwordResetToken) {
-    throw new Error("Invalid Token");
-  }
+
 
   const compareToken = await bcrypt.compare(
     token,
@@ -167,8 +176,6 @@ const deleteAccount = async(userId) => {
 
     return user;
 };
-
-
 
 module.exports = {
     signUp,

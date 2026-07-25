@@ -1,7 +1,7 @@
-const joi = require("joi");
+// const joi = require("joi");
 
-const joiSchema = joi.object({
-    name: joi.string().required()
-});
+// const joiSchema = joi.object({
+//     name: joi.string().required()
+// });
 
-module.exports = {joiSchema};
+// module.exports = {joiSchema};

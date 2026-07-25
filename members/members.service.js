@@ -2,7 +2,6 @@ const Model = require("./members.model");
 const taskModel = require("../tasks/tasks.model");
 const roelModel = require("../Admin/roles.model");
 
-//check
 const getMembers = async(projectId, role) => {
     let query = {}
 
@@ -13,7 +12,6 @@ const getMembers = async(projectId, role) => {
   return members;
 };
 
-//check
 const getMemberById = async(memberId) => {
     const getMember = await Model.findById(memberId);
 
@@ -24,53 +22,45 @@ const getMemberById = async(memberId) => {
     return getMember;
 };
 
+const removeMember = async(userId, memberId, projectId) => {
+  //get caller's role
+  const getCallerRoleId = await Model.find({projectId, userId}).role;
+  const getCallerRoleName = await roleModel.findById(getCallerRoleId).name;
 
-//come back to this too for the PMs
-const updateMemberRole = async(memberId, role) => {
-  const getMember = await Model.findById(memberId);
-  const memberRole = await getMember.role;
+  const getMemberRole = await Model.findById(memberId).role;
+  const getRoleName = await roleModel.findById(getMemberRole).name;
 
   if (!getMember || getMember.deletedAt != null) {
     throw new Error("Member not found");
   };
-
-  const getRoleName = await roleModel.findById(memberRole);
-  const roleName = getRoelName.name;
 
   if(roleName == "Owner") {
     throw new Error("Forbidden")
   };
 
-  memberRole = role;
+  if(getCallerRoleName == "Project Manager" && roleName == "Project Manager") {
+    throw new Error("Not allowed")
+  };
+
+  getMember.deletedAt = Date.now();
   await getMember.save();
 };
 
+const leaveProject = async(userId, projectId) => {
+  const getMembership = await Model.find({projectId, userId});
 
-//this is one of the endpoints where the member themselves alongside pms and owner;
-//come back for the pms 
-const deleteMember = async(userId) => {
-  const getMember = await Model.findById(memberId);
-  const memberRole = getMember.role;
-
-  const getRoleName = await roleModel.findById(memberRole);
-  const roleName = getRoelName.name;
-
-  if (!getMember || getMember.deletedAt != null) {
-    throw new Error("Member not found");
+  if(getMembership.deletedAt != null) {
+    throw new Error("Member not found")
   };
 
-  if(roleName == "Owner") {
-    throw new Error("Owner cannot be deleted")
-  };
-  getMember.deletedAt = Date.now();
-  await getMember.save();
-
+  getMembership.deletedAt = Date.now();
+  await getMembership.save();
 };
 
 module.exports = {
     getMembers,
     getMemberById,
-    updateMemberRole,
-    deleteMember
+    removeMember,
+    leaveProject
 };
 

@@ -1,31 +1,61 @@
-const winston = require("winston");
-const path = require("path");
+const {createLogger, format, transports} = require("winston");
+const winstonDailyRotateFile = require("winston-daily-rotate-file");
+require("dotenv").config();
 
-const filepath = path.join(process.cwd(), "logs");
-
-const logger = winston.createLogger({
-  level: "info",
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.splat(),
-    winston.format.json(),
+const logger = createLogger({
+  format: format.combine(
+    format.timestamp(),
+    format.errors({stack:true}),
+    format.json()
   ),
-  defaultMeta: { service: "user-service" },
   transports: [
-    new winston.transports.File({
-      filename: path.join(filepath, "error.log"),
+    new transports.Console({
+      format: format.combine(
+        format.colorize(),
+        format.simple()
+      )
+    }),
+
+    new transports.DailyRotateFile({
+      filename: "logs/application-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
+      zippedArchive: true,
+      maxSize: "20m",
+      maxFiles: "14d",
+    }),
+
+    new transports.DailyRotateFile({
+      filename: "logs/error-%DATE%.log",
       level: "error",
+      datePattern: "YYYY-MM-DD",
+      zippedArchive: true,
+      maxSize: "20m",
+      maxFiles: "14d"
     }),
-    new winston.transports.File({
-      filename: path.join(filepath, "combined.log"),
-    }),
+
+    new transports.DailyRotateFile({
+      filename: "logs/warn-%DATE%.log",
+      level: "warn",
+      datePattern: "YYYY-MM-DD",
+      zippedArchive: true,
+      maxSize: "20m",
+      maxFiles: "14d"
+    })
+  ],
+
+  exceptionHandlers: [
+    new transports.DailyRotateFile({
+      filename: "logs/exceptions-%DATE%.log",
+      datePattern: "YYYY-MM-DD"
+    })
+  ],
+
+  rejectionHandlers: [
+    new transports.DailyRotateFile({
+      filename: "logs/rejections-%DATE%.log",
+      datePattern: "YYYY-MM-DD"
+    })
   ]
 });
 
-
-logger.info("Hello, World"); 
-logger.error(new Error("an error")); 
-
-
-// module.exports = logger; 
+module.exports = logger;

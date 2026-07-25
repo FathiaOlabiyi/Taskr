@@ -1,38 +1,59 @@
+require("dotenv").config();
 const Model = require("./invitations.model");
 const roleModel = require("../Admin/roles.model");
 const memberModel = require("../members/members.model");
 const {send} = require("./invitations.utils");
-const agenda = require("../config/agenda");
 const authModel = require("../auth/auth.model");
+const mongoose = require("mongoose");
+const crypto = require("crypto");
 
-const createInvitation = async(projectId, email, roleId, scheduleSend, userId) => {
-  const existingInvitation = await Model.find({
+const createInvitation = async(projectId, {email, roleId, scheduleSend}, userId) => {
+  const existingInvitation = await Model.findOne({
     projectId,
     inviteeEmail: email});
 
+    //check if email is not owner's email
+    const findOwnerEmail = await authModel.findById(userId);
+    const ownerEmail = findOwnerEmail.email;
+
+    if(email == ownerEmail) {
+      throw new Error("Email belongs to owner")
+    };
+
+    //get caller's role
+    const findCallerRoleId = await memberModel.findOne({projectId, userId});
+    const callerRoleId = findCallerRoleId.role;
+    const callerRole = await roleModel.findById(callerRoleId);
+    const callerRoleName = callerRole.name;
+
   if (existingInvitation) {
     throw new Error("Email already exists");
-  }
+  };
 
   const findRole = await roleModel.findById(roleId);
-  if (!findRole || findRole.deletedAt != null) {
+  if (!findRole || findRole.deletedAt !== null) {
     throw new Error("Role not found");
-  }
+  };
 
-  if (findRole.name == "Owner") {
+  if (findRole.name === "Owner") {
     throw new Error("Not allowed");
-  }
+  };
 
-  if (findRole.name == "Project Manager") {
+  if (findRole.name === "Project Manager") {
+    if(callerRoleName === "Project Manager") {
+      throw new Error("Not allowed")
+    };
+
     const projectManager = await memberModel.find({ roleId });
-    console.log(projectManager);
+    console.log(projectManager.role);
 
     if (projectManager.length >= 5) {
       throw new Error("Project Managers cannot be greater than 5");
-    }
+    };
   };
 
-  const userMemberId = await memberModel.findOne({ userId })._id;
+  const findUserMemberId = await memberModel.findOne({userId});
+  const userMemberId = findUserMemberId._id
   const createInvite = await Model.create({
     projectId,
     roleId,
@@ -46,21 +67,33 @@ const createInvitation = async(projectId, email, roleId, scheduleSend, userId) =
     await createInvite.save();
     const scheduleDate = createInvite.scheduleSend;
     await agenda.start();
-    await agenda.schedule(scheduleDate, "send invitation", createInvite);
+    await agenda.schedule(scheduleDate, "send invitation", {invite: createInvite});
     console.log("Invitation has been scheduled");
   };
-  return createInvitation;
+  return createInvite;
 };
 
-const sendInvitation = async(invitationId) => {
+const sendInvitation = async(invitationId, userId, projectId) => {
+
+  const findMemberId = await memberModel.findOne({projectId, userId});
+  const memberId = findMemberId._id;
+
+    if (!mongoose.Types.ObjectId.isValid(invitationId)) {
+      throw new Error("Invalid invitation ID format");
+    };
+
     const findInvitation = await Model.findById(invitationId);
 
-    if(!findInvitation || findInvitation.deletedAt != null) {
+    if(String(findInvitation.invitedBy) !== String(memberId)) {
+      throw new Error("Not allowed");
+    }
+
+    if(!findInvitation || findInvitation.deletedAt !== null) {
       throw new Error("Invitation not found")
     };
 
-    if(findInvitation.status != "draft") {
-        throw new Error("Invitation has to be a draft")
+    if(findInvitation.status !== "draft") {
+        throw new Error(`Invitation ${findInvitation.status}, cannot send`)
     };
 
     if(findInvitation.scheduleSend) {
@@ -70,95 +103,100 @@ const sendInvitation = async(invitationId) => {
     send(findInvitation);
 };
 
-const validateInvitation = async(token, email) => {
-  const getInvitation = await Model.findOne({inviteeEmail: email});
+const getInvitationByToken = async(token) => {
+  const hashedToken = crypto.createHash("sha256").update("token").digest("hex");
 
-  if(!getInvitation || getInvitation.deletedAt != null) {
-    throw new Error("Invitation not found")
+  const invitation = await Model.findOne({token: hashedToken, deletedAt: null});
+
+  if(!invitation) {
+    throw new Error("Invitation not found");
   };
 
-  if(getInvitation.status != "pending") {
+  if(invitation.status !== "pending") {
     throw new Error("Invitation not valid")
   };
 
-  if(!getInvitation.expiresAt || Date.now() > getInvitation.expiresAt) {
+  if(Date.now() > invitation.expiresAt) {
+    invitation.status = "expired";
+    invitation.token = null;
+    await invitation.save();
+
     throw new Error("Invitation expired");
-    getInvitation.status = "expired";
-    await getInvitation.save();
   };
 
-  return getInvitation;
+  return invitation;
 };
 
-const acceptInvitation = async(email, token, userId) => {
-  const getInvitation = await Model.findOne({ email });
+const getInvitation = async (token) => {
+  const invitation = await getInvitationByToken(token);
 
-  if (!getInvitation || getInvitation.deletedAt != null) {
-    throw new Error("Invitation not found");
-  }
-
-  if (getInvitation.status != "pending") {
-    throw new Error("Invitation cannot be accepted");
-  }
-
-  if (!getInvitation.expiresAt || Date.now() > getInvitation.expiresAt) {
-    throw new Error("Invitation expired");
-    getInvitation.status = "expired";
-    await getInvitation.save();
-  }
-  const user = await authModel.findById(userId);
-
-  if(user.email !== invite.email) {
-    throw new Error("Not your invite")
-  };
-
-  const projectId = getInvitation.projectId;
-  const addedBy = getInvitation.invitedBy;
-  const role = getInvitation.role;
-
-  const existingMember = await memberModel.find({projectId, userId});
-
-  if(existingMember) {
-    throw new Error("Member already exists in project")
-  };
-
-  const createMember = await memberModel.create({projectId, userId, addedBy, role});
-
-  getInvitation.status = "accepted";
-  getInvitation.respondedAt = Date.now();
-  await getInvitation.save();
-  return createMember, getInvitation;
+  return invitation;
 };
 
-
-const rejectInvitation = async(email, token) => {
-  const getInvitation = await Model.findOne({ email });
-
-  if (!getInvitation || getInvitation.deletedAt != null) {
-    throw new Error("Invitation not found");
-  }
-
-  if (getInvitation.status != "pending") {
-    throw new Error("Invitation cannot be rejected");
-  }
-
-  if (!getInvitation.expiresAt || Date.now() > getInvitation.expiresAt) {
-    throw new Error("Invitation expired");
-    getInvitation.status = "expired";
-    await getInvitation.save();
-  };
+const acceptInvitation = async (token, userId) => {
+  const invitation = await getInvitationByToken(token);
 
   const user = await authModel.findById(userId);
 
-  if(user.email !== invite.email) {
-    throw new Error("Not your invites")
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (user.email !== invitation.inviteeEmail) {
+    throw new Error("This invitation is not yours.");
+  }
+
+  const existingMember = await memberModel.findOne({
+    projectId: invitation.projectId,
+    userId,
+  });
+
+  if (existingMember) {
+    throw new Error("User is already a member.");
+  }
+
+  const member = await memberModel.create({
+    projectId: invitation.projectId,
+
+    userId,
+
+    addedBy: invitation.invitedBy,
+
+    role: invitation.roleId,
+  });
+
+  invitation.status = "accepted";
+  invitation.respondedAt = new Date();
+  invitation.token = null;
+
+  await invitation.save();
+
+  return {
+    invitation,
+    member,
   };
+};
 
-  getInvitation.status = "rejected";
-  getInvitation.respondedAt = Date.now();
-  await getInvitation.save();
+const rejectInvitation = async (token, userId) => {
+  const invitation = await getInvitationByToken(token);
 
-  return getInvitation;
+  const user = await authModel.findById(userId);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (user.email !== invitation.inviteeEmail) {
+    throw new Error("This invitation is not yours.");
+  }
+
+  invitation.status = "rejected";
+  invitation.respondedAt = new Date();
+  invitation.token = null;
+
+  await invitation.save();
+
+  return invitation;
 };
 
 const revokeInvitation = async(invitationId) => {
@@ -179,6 +217,7 @@ const revokeInvitation = async(invitationId) => {
   }
 
   getInvitation.status = "revoked";
+  getInvitation.token = null;
   await getInvitation.save();
 
   return getInvitation;
@@ -203,6 +242,40 @@ const rescheduleInvitation = async(invitationId, scheduleSend) => {
   console.log("Invitation has been scheduled");
 
   return getInvitation;
+};
+
+const resendInvitation = async(invitationId, userId, projectId) => {
+
+    const findMemberId = await memberModel.findOne({ projectId, userId });
+    const memberId = findMemberId._id;
+
+    if (!mongoose.Types.ObjectId.isValid(invitationId)) {
+      throw new Error("Invalid invitation ID format");
+    };
+
+    const findInvitation = await Model.findById(invitationId);
+
+    if (String(findInvitation.invitedBy) !== String(memberId)) {
+      throw new Error("Not allowed");
+    };
+
+    if (!findInvitation || findInvitation.deletedAt !== null) {
+      throw new Error("Not found");
+    };
+
+    if (findInvitation.scheduleSend) {
+      throw new Error("Invitation has already been scheduled");
+    };
+
+    if(findInvitation.status === "pending" || findInvitation.status === "expired") {
+      findInvitation.token = null;
+      findInvitation.expiresAt = null;
+      send(findInvitation);
+      await findInvitation.save();
+      return findInvitation;
+    }else {
+      throw new Error("Invitation cannot be resent");
+    };
 };
 
 const getInvitations = async(projectId, status) => {
@@ -277,11 +350,12 @@ const deleteInvitation = async(invitationId) => {
 module.exports = {
   createInvitation,
   sendInvitation,
-  validateInvitation,
+  getInvitation,
   acceptInvitation,
   rejectInvitation,
   revokeInvitation,
   rescheduleInvitation,
+  resendInvitation,
   getInvitations,
   getInvitationById,
   updateInvitation,

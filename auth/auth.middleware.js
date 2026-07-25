@@ -5,14 +5,13 @@ require("dotenv").config();
 
 const firstname = joi.string().pattern(/^[A-Za-z]+$/);
 const lastname = joi.string().pattern(/^[A-Za-z]+$/);
-// const username = joi.string();
+
 const email = joi.string().email().lowercase().required().messages({"string.email": "Email must be a valid email"});
 const password = joi.string().pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")).required().messages({"string.pattern.base": "Password must be 8 characters long, must include at least a lowercase letter, an uppercase letter, a number and a special character"});
 
 const signUpSchema = joi.object({
     firstname: firstname.required(),
     lastname: lastname.required(),
-    // username: username.required(),
     email,
     password,
     profilePicture: joi.string(),
@@ -34,29 +33,37 @@ const validateEmailOnlySchema = joi.object({
 });
 
 
+const logger = require("../logger/winston");
+
 const validateToken = async(req, res, next) => {
     try {
         const bearerToken = req.headers.authorization;
 
         if(!bearerToken || !bearerToken.startsWith("Bearer ")) {
+            logger.warn("Unauthorized");
             return res.status(403).json({message: "Unauthorized"});
         };
 
         const Token = bearerToken.split(" ")[1];
 
         if(!Token) {
+            logger.warn("Unauthorized");
             return res.status(403).json({message: "Unauthorized"});
         };
 
         const validToken = jwt.verify(Token, process.env.JWT_SECRET);
 
         if(!validToken) {
+            logger.warn("Unauthorized");
             return res.status(403).json({message: "Unauthorized"});
         };
 
         const user = await Model.findById(validToken.id);
+        logger.info("User found");
+
 
         if(!user) {
+            logger.warn("Unauthorized");
             return res.status(403).json({
                 message: "Unauthorized"
             });
@@ -64,6 +71,7 @@ const validateToken = async(req, res, next) => {
         req.user = user;
         next();
     }catch(err) {
+        logger.warn(err.message);
         return res.status(401).json({message: "Invalid Token", error: err.message});
     };
 }

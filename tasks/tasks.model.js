@@ -79,6 +79,7 @@ const Schema = new mongoose.Schema(
 
     deletedAt: {
       type: Date,
+      default: null
     },
 
     deletedBy: {

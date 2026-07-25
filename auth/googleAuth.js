@@ -4,9 +4,11 @@ const Model = require("./auth.model");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
+const logger = require("../logger/winston");
+
 const generateToken = (user) => {
   return jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, {
-    expiresIn: '7d'
+    expiresIn: '1d'
   });
 };
 
@@ -21,25 +23,29 @@ passport.use(
       try {
         let user = await Model.findOne({ googleId: profile.id });
         if (user) {
+          if (user.deletedAt != null || user.isDeleted == true) {
+            logger.warn("This account was previously deleted, restore account to continue");
+            throw new Error("This account was previously deleted, restore account to continue");
+          }
           //if user registered with google or has logged in with google
           user.lastLogin = Date.now();
           await user.save();
-          console.log(
-            "Registered with google/LoggedIn with google before, Login successful",
-          );
         } else {
           //user exists manually
           const email = profile.emails[0].value;
 
           user = await Model.findOne({ email });
           if (user) {
+            if (user.deletedAt != null || user.isDeleted == true) {
+              logger.warn("This account was previously deleted, restore account to continue");
+            throw new Error("This account was previously deleted, restore account to continue");
+          }
             user.googleId = profile.id;
             if (user.isVerified == false) {
               user.isVerified = true;
             }
             user.lastLogin = Date.now();
             await user.save();
-            console.log("Manually exists, Login with google successful");
           } else {
             //user does not exist at all
             user = await Model.create({
@@ -49,11 +55,11 @@ passport.use(
               email: profile.emails[0].value,
               password: null,
               isVerified: true,
-              authProvider: "google"
+              authProvider: "google",
             });
           }
-          console.log("Registration with Google successful");
-        }
+          logger.info("Registration with Google successful");
+        };
         const token = generateToken(user);
         done(null, { user, token });
       } catch (err) {
@@ -70,6 +76,12 @@ const googleLogin = passport.authenticate("google", {
 const googleCallback = (req, res, next) => {
   passport.authenticate("google", { session: false }, (err, data) => {
     if (err || !data) {
+      if(err.message.includes("previously deleted")) {
+        logger.warn(err.message);
+        return res.json({
+          message: err.message,
+        });
+      };
       return res.redirect("/login");
     }
 

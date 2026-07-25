@@ -1,57 +1,58 @@
-const roleModel = require("./roles.model");
-const rolePermissionModel = require("./role-permission.model");
 
-const createRole = async({name}) => {
-    const existingRole = await roleModel.findOne({name});
+// const roleModel = require("./roles.model");
+// const rolePermissionModel = require("./role-permission.model");
 
-    if(existingRole) {
-        throw new Error(`Role with name "${name}" already exists`);
-    };
+// const createRole = async({name}) => {
+//     const existingRole = await roleModel.findOne({name});
 
-    const createdRole = await roleModel.create({name});
-    return createdRole;
-};
+//     if(existingRole) {
+//         throw new Error(`Role with name "${name}" already exists`);
+//     };
 
-const getAllRoles = async() => {
-    const roles = await roleModel.find({deletedAt: null});
-    return roles;
-};
+//     const createdRole = await roleModel.create({name});
+//     return createdRole;
+// };
 
-const getRoleById = async(roleId) => {
-    const getRole = await roleModel.findById(roleId);
+// const getAllRoles = async() => {
+//     const roles = await roleModel.find({deletedAt: null});
+//     return roles;
+// };
 
-    if(!getRole) {
-        throw new Error("Role not found");
-    }
-    if(getRole.deletedAt != null) {
-        throw new Error("Role has been deleted")
-    };
+// const getRoleById = async(roleId) => {
+//     const getRole = await roleModel.findById(roleId);
 
-    return getRole;
-};
+//     if(!getRole) {
+//         throw new Error("Role not found");
+//     }
+//     if(getRole.deletedAt != null) {
+//         throw new Error("Role has been deleted")
+//     };
 
-const deleteRole = async(roleId) => {
-    const getRole = await roleModel.findById(roleId);
+//     return getRole;
+// };
 
-    if(!getRole) {
-        throw new Error("Role not found");
-    };
+// const deleteRole = async(roleId) => {
+//     const getRole = await roleModel.findById(roleId);
 
-    if (getRole.deletedAt != null) {
-        throw new Error("Role already deleted");
-    };
+//     if(!getRole) {
+//         throw new Error("Role not found");
+//     };
 
-    getRole.deletedAt = new Date();
-    await getRole.save();
+//     if (getRole.deletedAt != null) {
+//         throw new Error("Role already deleted");
+//     };
 
-    await rolePermissionModel.updateMany({ role: roleId, deletedAt: null }, {deletedAt: new Date()});
+//     getRole.deletedAt = new Date();
+//     await getRole.save();
 
-    return getRole;
-};
+//     await rolePermissionModel.updateMany({ role: roleId, deletedAt: null }, {deletedAt: new Date()});
 
-module.exports = {
-    createRole, 
-    getAllRoles, 
-    getRoleById, 
-    deleteRole
-};
+//     return getRole;
+// };
+
+// module.exports = {
+//     createRole, 
+//     getAllRoles, 
+//     getRoleById, 
+//     deleteRole
+// };

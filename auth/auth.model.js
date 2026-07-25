@@ -24,17 +24,18 @@ const Schema = new mongoose.Schema(
     },
 
     googleId: {
-        type: String
+      type: String,
     },
 
     authProvider: {
       type: String,
-      enum: ["manual", "google"]
+      enum: ["manual", "google"],
     },
 
     profilePicture: {
       type: String,
-      default: null,
+      default:
+        "https://res.cloudinary.com/djlroslfh/image/upload/v1756226223/default-admin_kevzdt.png",
     },
 
     lastLogin: {
@@ -68,7 +69,7 @@ const Schema = new mongoose.Schema(
     passwordResetToken: {
       type: String,
     },
-    
+
     passwordResetTokenExpiredAt: {
       type: Date,
     },

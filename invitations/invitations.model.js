@@ -33,7 +33,7 @@ const Schema = new mongoose.Schema(
 
     token: {
         type: String,
-        required: true
+        default: null
     },
 
     scheduleSend: {
@@ -41,7 +41,8 @@ const Schema = new mongoose.Schema(
     },
 
     expiresAt: {
-        type: Date
+        type: Date,
+        default: null
     },
 
     sentAt: {
@@ -54,6 +55,7 @@ const Schema = new mongoose.Schema(
 
     deletedAt: {
       type: Date,
+      default: null
     }
   },
   {
@@ -61,4 +63,4 @@ const Schema = new mongoose.Schema(
   },
 );
 
-module.export = mongoose.model("Invitation", Schema)
+module.exports = mongoose.model("Invitation", Schema)

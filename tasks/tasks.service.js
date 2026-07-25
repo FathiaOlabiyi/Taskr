@@ -1,8 +1,9 @@
 const Model = require("./tasks.model");
 const memberModel = require("../members/members.model");
 const roleModel = require("../Admin/roles.model");
+const mongoose = require("mongoose");
 
-const createTask = async(userId, projectId, title, description, priority, dueDate) => {
+const createTask = async(userId, projectId, {title, description, priority, dueDate}) => {
 
     const existingTask = await Model.findOne({title});
 
@@ -13,151 +14,203 @@ const createTask = async(userId, projectId, title, description, priority, dueDat
     const findMember = await memberModel.findOne({projectId, userId, deletedAt: null});
 
     const createdBy = findMember._id;
-    console.log(createdBy);
 
         const memberRole = findMember.role;
-        const getRole = await roleModel.findById(memberRole).name;
+        const getRole = await roleModel.findById(memberRole);
+        const role = getRole.name;
 
-        if (getRole == "Member") {
+        if (role == "Member") {
             const assignedTo = createdBy;
-            const startedAt = Date.now();
+
+            const task = await Model.create({
+              projectId,
+              createdBy,
+              assignedTo,
+              title,
+              description,
+              priority,
+              dueDate,
+              startedAt,
+            });
+
+            return task;
+        }else {
+           const task = await Model.create({
+             projectId,
+             createdBy,
+             title,
+             description,
+             priority,
+             dueDate
+           });
+           return task;
         };
-
-    const task = await Model.create({projectId, createdBy, assignedTo, title, description, priority, dueDate, startedAt});
-
-
-    return task;
 };
 
 const getAllTasks = async(projectId, userId, status, title, priority, assigned, assignedTo) => {
 
-    query = {};
-    if (status) {
-        query.status = {$regex: status, $options: "i"}
+  let query = {
+    projectId,
+    deletedAt: null
+  };
+
+  if(status) {
+    query.status = {$regex: status, $options: "i"};
+  };
+
+  if(title) {
+    query.title = {$regex: title, $options: "i"};
+  };
+
+  if(priority) {
+    query.priority = {$regex: priority, $options: "i"}
+  };
+
+  if(assigned === "true") {
+    query.assignedTo = {$ne: null};
+  };
+
+  if(assigned === "false") {
+    query.assignedTo = null
+  };
+
+  if(assignedTo === "me") {
+    const member = await memberModel.findOne({projectId, userId});
+
+    if(!member) {
+      throw new Error("Member not found");
     };
 
-    if(title) {
-        query.title = { $regex: title, $options: "i" };
-    };
-    if(priority) {
-        query.priority = { $regex: priority, $options: "i" };
-    };
+    query.assignedTo = member._id;
+  };
 
-    if(assigned) {
-        if(assigned == "true") {
-            return await Model.find({projectId, assignedTo: {$ne: null}});
-        };
+  if(assignedTo && assignedTo !== "me") {
+    if (!mongoose.Types.ObjectId.isValid(assignedTo)) {
+      throw new Error("Invalid member ID format");
+    };
+    const member = await memberModel.findOne({
+      _id: assignedTo, projectId, deletedAt: null
+    });
 
-        if(assigned == "false") {
-            return await Model.find({projectId, assignedTo: null})
-        };
+    if(!member) {
+      throw new Error("Member not found");
     };
 
-    if(assignedTo) {
-        if(assignedTo == "me") {
-            query.assignedTo = assignedTo;
-            const getMember = await memberModel.findOne({projectId, userId});
-            const memberId = getMember._id;
+    query.assignedTo = assignedTo;
+  };
 
-            const getTasks = await Model.find({projectId, assignedTo: memberId, deletedAt: null});
-            return getTasks;
-        }else {
-            query.assignedTo = assignedTo;
-            const checkMember = await memberModel.findOne({projectId, _id: assignedTo});
-            console.log(checkMember);
-
-            if(!checkMember || checkMember.deletedAt != null) {
-                throw new Error("Not a member")
-            };
-
-            const getTasks = await Model.find({projectId, assignedTo: assignedTo});
-            return getTasks;
-        }
-    }
-
-    const getTasks = await Model.find({projectId, query, deletedAt: null});
-    return getTasks;
+    const tasks =  await Model.find(query);
+    return tasks;
 };
 
-const getTaskAssignedToMember = async (memberId) => {
-  const getTasks = await Model.find({assignedTo: memberId, deletedAt: null});
+const getTaskAssignedToMember = async (projectId, memberId) => {
+  const checkMember = await memberModel.findOne({ _id: memberId, projectId, deletedAt: null});
 
+  if (!mongoose.Types.ObjectId.isValid(memberId)) {
+    throw new Error("Invalid member ID format");
+  };
+
+  if (!checkMember) {
+    throw new Error("Not a member");
+  }
+
+  const getTasks = await Model.find({ assignedTo: memberId, deletedAt: null });
   return getTasks;
 };
 
 const getTaskById = async(taskId) => {
-    const getTask = await Model.findById(taskId);
-
-    if (!getTask || getTask.deletedAt != null) {
-      throw new Error("Task not found");
+    if (!mongoose.Types.ObjectId.isValid(taskId)) {
+      throw new Error("Invalid member ID format");
     };
-    return getTask;
+
+  const getTask = await Model.findById(taskId);
+
+  if (!getTask || getTask.deletedAt !== null) {
+    throw new Error("Task not found");
+  }
+  return getTask;
 };
 
-const updateTask = async(userId, taskId, title, description, priority, dueDate) => {
-    const getTask = await Model.findById(taskId);
-    const getMemberId = await memberModel.find({ userId });
-    const memberId = getMemberId._id;
+const updateTask = async(userId, taskId, {title, description, priority, dueDate}) => {
 
-    if(memberId != getTask.assignedTo) {
-        throw new Error("You do not have permission")
-    };
+  const getTask = await Model.findById(taskId);
+  const getMemberId = await memberModel.find({ userId });
+  const memberId = getMemberId._id;
+  const getMemberRole = getMemberId.role;
 
-    if(!getTask || getTask.deletedAt != null) {
-        throw new Error("Task not found")
-    };
+  const getRole = await roleModel.findOne(getMemberRole);
+  const roleName = getRole.name;
 
-    if(getTask.status == "completed" || getTask.status == "review") {
-        throw new Error("Task cannot be updated")
+  if (!getTask || getTask.deletedAt !== null) {
+    throw new Error("Task not found");
+  }
+
+  if (memberId !== getTask.assignedTo && roleName !== "Owner" && roleName !== "Project Manager") {
+    throw new Error("You do not have permission");
+  };
+
+  if (getTask.status == "completed" || getTask.status == "review") {
+    throw new Error("Task cannot be updated");
+  }
+
+  if (title) {
+    console.log(title);
+    const existingTask = await Model.findOne({ title });
+
+    if (existingTask) {
+      throw new Error(`Task with title ${existingTask.title} exists`);
     }
+    getTask.title = title;
+  }
 
-    if(title) {
-        const existingTask = await Model.findOne({title});
-        
-            if (existingTask) {
-              throw new Error(`Task with title ${existingTask.title} exists`);
-            }
-        getTask.title = title;
-    };
+  if (description) {
+    getTask.description = description;
+  }
 
-    if(description) {
-        getTask.description = description;
-    };
+  if (priority) {
+    getTask.priority = priority;
+  }
 
-    if(priority) {
-        getTask.priority = priority;
-    };
+  if (dueDate) {
+    getTask.dueDate = dueDate;
+  }
 
-    if(dueDate) {
-        getTask.dueDate = dueDate;
-    };
-
-    getTask.updatedBy = memberId;
-    await getTask.save();
+  getTask.updatedBy = memberId;
+  await getTask.save();
+  return getTask;
 };
 
-const updateStatus = async(userId, taskId, status, blocker, expectedResumeDate) => {
+const updateStatus = async(userId, taskId, {status, blocker, expectedResumeDate}) => {
   const fetchTask = await Model.findById(taskId);
+  console.log(fetchTask);
   const fetchStatus = fetchTask.status;
 
   const getMemberId = await memberModel.find({ userId });
   const memberId = getMemberId._id;
+  const getMemberRole = getMemberId.role;
 
-  if (memberId != getTask.assignedTo) {
+  const getRole = await roleModel.findOne(getMemberRole);
+  const roleName = getRole.name;
+
+    if (!fetchTask || fetchTask.deletedAt !== null) {
+      throw new Error("Task not found");
+    };
+
+  if (
+    memberId != fetchTask.assignedTo &&
+    roleName !== "Owner" &&
+    roleName !== "Project Manager"
+  ) {
     throw new Error("You do not have permission");
   }
 
-  if (!fetchTask || fetchTask.deletedAt !== null) {
-    throw new Error("Task not found");
-  }
-
-  if (status == fetchStatus) {
+  if (status === fetchStatus) {
     throw new Error("Task is already in this state");
   }
 
   //todo to in-progress
-  if (fetchStatus == "todo" && status == "in-progress") {
-    if (fetchTask.assignedTo == null) {
+  if (fetchStatus === "todo" && status === "in-progress") {
+    if (fetchTask.assignedTo === null) {
       throw new Error("Task must be assigned");
     }
 
@@ -199,6 +252,11 @@ const updateStatus = async(userId, taskId, status, blocker, expectedResumeDate) 
 
     fetchStatus = status;
     fetchTask.completedAt = Date.now();
+  }
+  else if(fetchStatus === "todo" && status !== "in=progress") {
+
+    throw new Error("Task still in todo, not in progress yet");
+    
   } else {
     throw new Error("Not allowed");
   }

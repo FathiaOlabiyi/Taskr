@@ -3,7 +3,6 @@ const joi = require("joi");
 const createTaskJoi = joi.object({
     title: joi.string().required(),
     description: joi.string().required(),
-    assignedTo: joi.string(),
     priority: joi.string(),
     dueDate: joi.date().greater("now")
 });

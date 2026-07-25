@@ -2,7 +2,7 @@ const joi = require("joi");
 
 const createProjectJoi = joi.object({
     title: joi.string().required(),
-    description: joi.string().required(),
+    description: joi.string(),
     dueDate: joi.date().greater("now")
 });
 
@@ -26,11 +26,6 @@ const updateStatusJoi = joi.object({
     otherwise: joi.forbidden(),
   }),
 });
-
-
-
-
-
 
 module.exports = {
     createProjectJoi,
