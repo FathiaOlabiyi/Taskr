@@ -14,18 +14,25 @@ const getUserProfile = async(req, res) => {
         });
 
     }catch(err) {
-        logger.error(err.message);
-        res.status(500).json({
-            message: "Internal server error",
-            error: err.message
-        });
-
         if(err && err.message.includes("not found")) {
             logger.warn(err.message);
             return res.status(404).json({
                 message: err.message
             });
-        }
+        };
+
+        if(err && err.message.includes("Invalid")) {
+            logger.warn(err.message);
+            return res.status(400).json({
+                message: err.message
+            });
+        };
+
+        logger.error(err.message);
+        res.status(500).json({
+          message: "Internal server error",
+          error: err.message
+        });
     };
 }
 
@@ -41,18 +48,25 @@ const getProfilePicture = async(req, res) => {
             data: response
         });
     }catch(err) {
-        if(err && err.message.includes("not found")) {
-            logger.warn(err.message);
-            return res.status(404).json({
-                message: err.message
-            });
-        };
-
-        logger.error(err.message);
-        res.status(500).json({
-            message: "Internal server error",
-            error: err.message
+      if (err && err.message.includes("not found")) {
+        logger.warn(err.message);
+        return res.status(404).json({
+          message: err.message
         });
+      }
+
+      if (err && err.message.includes("Invalid")) {
+        logger.warn(err.message);
+        return res.status(400).json({
+          message: err.message
+        });
+      }
+
+      logger.error(err.message);
+      res.status(500).json({
+        message: "Internal server error",
+        error: err.message
+      });
     };
 };
 
@@ -60,6 +74,7 @@ const updateProfilePicture = async(req, res) => {
     try {
         const userId = req.user.id;
         const profilePicture = req.file;
+        console.log(profilePicture)
 
         const response = await Services.updateProfilePicture(userId, profilePicture);
         logger.info("Profile picture upload successful");
@@ -69,18 +84,26 @@ const updateProfilePicture = async(req, res) => {
             data: response
         });
     }catch(err) {
-        logger.error(err.message);
-        res.status(500).json({
-            message: "Internal server error",
-            error: err.message
-        });
 
-        if(err && err.message.includes("not found")) {
-            logger.warn(err.message);
-            return res.status(404).json({
-                message: err.message
-            });
-        };
+      if (err && err.message.includes("not found")) {
+        logger.warn(err.message);
+        return res.status(404).json({
+          message: err.message
+        });
+      }
+
+      if (err && err.message.includes("Invalid")) {
+        logger.warn(err.message);
+        return res.status(400).json({
+          message: err.message
+        });
+      };
+
+      logger.error(err.message);
+      res.status(500).json({
+        message: "Internal server error",
+        error: err.message
+      });
     };
 };
 
@@ -95,18 +118,25 @@ const removeProfilePicture = async(req, res) => {
             message: "Profile Picture removed"
         });
     }catch(err) {
-        if(err && err.message.includes("not found")) {
-            logger.warn(err.message);
-            return res.status(404).json({
-                message: err.message
-            });
-        };
-
-        logger.error(err.message);
-        res.status(500).json({
-            message: "Internal server error",
-            error: err.message
+      if (err && err.message.includes("not found")) {
+        logger.warn(err.message);
+        return res.status(404).json({
+          message: err.message
         });
+      }
+
+      if (err && err.message.includes("Invalid")) {
+        logger.warn(err.message);
+        return res.status(400).json({
+          message: err.message
+        });
+      }
+
+      logger.error(err.message);
+      res.status(500).json({
+        message: "Internal server error",
+        error: err.message,
+      });
     };
 };
 

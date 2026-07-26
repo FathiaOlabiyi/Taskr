@@ -55,6 +55,19 @@ app.get("/homepage", (req, res) => {
 // app.use("/api/v1/admin/permission", permissionRoute);
 
 
+//agenda
+
+const agenda = require("./config/agenda");
+require("./invitations/invitations.utils");
+(async () => {
+  try {
+    await agenda.start();
+    console.log("Agenda started");
+  } catch (error) {
+    console.error(error);
+  }
+})();
+
 //User routes
 app.use(passport.initialize());
 

@@ -33,9 +33,15 @@ const Schema = new mongoose.Schema(
     },
 
     profilePicture: {
-      type: String,
-      default:
-        "https://res.cloudinary.com/djlroslfh/image/upload/v1756226223/default-admin_kevzdt.png",
+      url: {
+        type: String,
+        default:  "https://res.cloudinary.com/djlroslfh/image/upload/v1756226223/default-admin_kevzdt.png",
+      },
+
+      publicId: {
+        type: String,
+        default: null
+      }
     },
 
     lastLogin: {

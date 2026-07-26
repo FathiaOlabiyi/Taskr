@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const nodemailer = require("../utils/nodemailer");
 const agenda = require("../config/agenda");
 require("dotenv").config();
+const invitationModel = require("./invitations.model");
 
 const logger = require("../logger/winston");
 
@@ -11,7 +12,7 @@ const generateToken = (bytes = 32) => {
 };
 
 const sendInvitation = async(projectId, email, token) => {
-    const link = `${process.env.APP_URL}/project/${projectId}/invitation/token=${token}`;
+    const link = `${process.env.APP_URL}/project/${projectId}/invitation?token=${token}`
     try {
             nodemailer.transporter.sendMail({
         from: `${process.env.EMAIL_USER}`,
@@ -29,7 +30,6 @@ const sendInvitation = async(projectId, email, token) => {
 
 const send = async(invitation) => {
     const token = generateToken();
-    // const hashToken = await bcrypt.hash(token, 10);
     const hashToken = crypto.createHash("sha256").update(token).digest("hex");
     invitation.token = hashToken;
     invitation.expiresAt = Date.now() + 60 * 60 * 1000 * 24 * 3 //3 days
@@ -42,11 +42,11 @@ const send = async(invitation) => {
 };
 
 agenda.define("send invitation", async (job) => {
-    const invitation = job.attrs.data.invite;
-    send(invitation);
+    const {invitationId} = job.attrs.data;
+    const getInvitation = await invitationModel.findById(invitationId);
+    await send(getInvitation);
   });
 
 module.exports = {
-    send,
-    agenda
+    send
 };

@@ -14,6 +14,13 @@ const getMembers = async(req, res) => {
             data: response
         });
     }catch(err) {
+
+        if(err && err.message.includes("exists")) {
+            logger.warn(err.message);
+            return res.status(404).json({
+                message: err.message
+            });
+        };
         logger.error(err.message);
         res.status(500).json({
             message: "Internal server error",
@@ -30,7 +37,8 @@ const getMemberById = async(req, res) => {
         logger.info("Member retrived successfully");
 
         return res.status(200).json({
-            message: "Member retrived successfully"
+            message: "Member retrived successfully",
+            data: response
         });
     }catch(err) {
         if(err && err.message.includes("not found")) {
@@ -39,13 +47,20 @@ const getMemberById = async(req, res) => {
             return res.status(404).json({
                 message: err.message
             });
+        };
 
-            logger.error(err.message);
-            res.status(500).json({
-                message: "Internal server error",
-                error: err.message
+        if(err && err.message.includes("Invalid")) {
+            logger.warn(err.message);
+            return res.status(400).json({
+                message: err.message
             });
         };
+
+        logger.error(err.message);
+        res.status(500).json({
+            message: "Internal server error",
+            error: err.message,
+        });
     };
 };
 
@@ -62,28 +77,38 @@ const removeMember = async(req, res) => {
             message: "Member successfully removed"
         });
     }catch(err) {
+      if (err && err.message.includes("not found")) {
+        logger.warn(err.message);
 
-        if(err && err.message.includes("not found")) {
-            logger.warn(err.message);
-
-            return res.status(404).json({
-                message: err.message
-            });
-        };
-
-        if(err && [err.message.includes("Forbidden") || err.message.includes("allowed")]) {
-            logger.warn(err.message);
-
-            return res.status(409).json({
-                message: err.message
-            });
-        };
-
-        logger.error(err.message);
-        res.status(500).json({
-            message: "Internal server error",
-            error: err.message
+        return res.status(404).json({
+          message: err.message,
         });
+      }
+
+      if (err && err.message.includes("Invalid")) {
+        logger.warn(err.message);
+        return res.status(400).json({
+          message: err.message,
+        });
+      }
+
+      if (
+        err && [
+          err.message.includes("Forbidden") || err.message.includes("allowed"),
+        ]
+      ) {
+        logger.warn(err.message);
+
+        return res.status(409).json({
+          message: err.message,
+        });
+      }
+
+      logger.error(err.message);
+      res.status(500).json({
+        message: "Internal server error",
+        error: err.message,
+      });
     }
 };
 
@@ -99,18 +124,32 @@ const leaveProject = async(req, res) => {
             message: "You are no longer a member"
         });
     }catch(err) {
-        if(err && err.message.includes("not found")) {
-            logger.warn(err.message);
-            return res.status(404).json({
-                message: err.message
-            });
-        }
-
-        logger.error(err.message);
-        res.status(500).json({
-            message: "Internal server error",
-            error: err.message
+      if (err && err.message.includes("not found")) {
+        logger.warn(err.message);
+        return res.status(404).json({
+          message: err.message,
         });
+      }
+
+      if (err && err.message.includes("Invalid")) {
+        logger.warn(err.message);
+        return res.status(400).json({
+          message: err.message,
+        });
+      }
+
+      if (err && err.message.includes("cannot leave")) {
+        logger.warn(err.message);
+        return res.status(409).json({
+          message: err.message,
+        });
+      };
+
+      logger.error(err.message);
+      res.status(500).json({
+        message: "Internal server error",
+        error: err.message,
+      });
     };
 };
 

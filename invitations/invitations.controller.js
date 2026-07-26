@@ -91,10 +91,9 @@ const sendInvitation = async(req, res) => {
 
 const getInvitation = async(req, res) => {
     try {
-        const token = req.params.token;
+        const token = req.query.token;
         const response = await Services.getInvitation(token);
         logger.info("Successful");
-
         return res.status(200).json({
             message: "Successful",
             data: response
@@ -110,7 +109,7 @@ const getInvitation = async(req, res) => {
 
 const acceptInvitation = async(req, res) => {
     try {
-        const token = req.params.token;
+        const token = req.query.token;
         const userId = req.user.id;
 
         await Services.acceptInvitation(token, userId);
@@ -153,12 +152,15 @@ const acceptInvitation = async(req, res) => {
 
 const rejectInvitation = async(req, res) => {
     try {
-        const token = req.params.token;
+        const token = req.query.token;
         const userId = req.user.id;
 
         await Services.rejectInvitation(token, userId);
         logger.info("Invitation has been rejected");
 
+        return res.status(200).json({
+          message: "Invitation rejected",
+        });
     }catch(err) {
       if (err && err.message.includes("not found")) {
         logger.warn(err.message);
@@ -214,6 +216,12 @@ const revokeInvitation = async(req, res) => {
             });
         };
 
+        if(err && err.message.includes("Invalid")) {
+            logger.warn(err.message);
+            return res.status(400).json({
+                message: err.message})
+        };
+
         logger.error(err.message);
         res.status(500).json({
             message: "Internal server error",
@@ -237,7 +245,8 @@ const rescheduleInvitation = async(req, res) => {
         logger.info("Invitation rescheduled");
 
         return res.status(201).json({
-            message: "Invitation rescheduled"
+            message: "Invitation rescheduled",
+            data: response
         });
         }catch(err) {
             if(err && err.message.includes("not found")) {
@@ -267,7 +276,7 @@ const resendInvitation = async(req, res) => {
         const userId = req.user.id;
         const projectId = req.params.id;
 
-        const response = await Services.sendInvitation(invitationId, userId, projectId);
+        const response = await Services.resendInvitation(invitationId, userId, projectId);
         logger.info("Invitation resent");
 
         return res.status(201).json({
@@ -308,7 +317,8 @@ const resendInvitation = async(req, res) => {
 const getInvitations = async(req, res) => {
     try {
         const projectId = req.params.id;
-        const status = req.query
+        const status = req.query.status;
+        console.log(status);
 
         const response = await Services.getInvitations(projectId, status);
         logger.info("Invitations returned successfully");
@@ -330,7 +340,8 @@ const getInvitations = async(req, res) => {
 
 const getInvitationById = async(req, res) => {
     try {
-        const invitationId = res.params.invitationId;
+        const invitationId = req.params.invitationId;
+        console.log(invitationId);
 
         const response = await Services.getInvitationById(invitationId);
         logger.info("Invitation returned successfully");
@@ -341,24 +352,32 @@ const getInvitationById = async(req, res) => {
         });
 
     }catch(err) {
-        if(err && err.message.includes("not found")) {
-            logger.warn(err.message);
-            return res.status(404).json({
-                message: err.message
-            });
-        };
-
-        logger.error(err.message);
-        res.status(500).json({
-            message: "Internal server error",
-            error: err.message
+      if (err && err.message.includes("not found")) {
+        logger.warn(err.message);
+        return res.status(404).json({
+          message: err.message,
         });
+      }
+
+      if (err && err.message.includes("Invalid")) {
+        logger.warn(err.message);
+        return res.status(400).json({
+          message: err.message,
+        });
+      }
+
+      logger.error(err.message);
+      res.status(500).json({
+        message: "Internal server error",
+        error: err.message,
+      });
     };
 };
 
 const updateInvitation = async(req, res) => {
     try {
         const invitationId = req.params.invitationId;
+        const projectId = req.params.id;
         const {value, error} = joi.updateInvitationJoi.validate(req.body);
 
         if(error) {
@@ -368,7 +387,7 @@ const updateInvitation = async(req, res) => {
             });
         };
 
-        const response = await Services.updateInvitation(invitationId, value);
+        const response = await Services.updateInvitation(projectId, invitationId, value);
         logger.info("Inivtation update successful");
 
         return res.status(201).json({
@@ -387,6 +406,13 @@ const updateInvitation = async(req, res) => {
         if(err && [err.message.includes("updated") || err.message.includes("allowed") || err.message.includes("greater than")]) {
             logger.warn(err.message);
             return res.status(409).json({
+                message: err.message
+            });
+        };
+
+        if(err && err.message.includes("Invalid")) {
+            logger.warn(err.message);
+            return res.status(400).json({
                 message: err.message
             });
         };
