@@ -6,8 +6,6 @@ const mongoose = require("mongoose");
 let session;
 const logger = require("../logger/winston");
 
-//DO NOT FORGET BUINESS LOGIC LOGGING FOR EACH AND EVERY ONE OF THESE ENDPOINTS
-
 const createProject = async(ownerId, {title, description, dueDate}) => {
   const existingProject = await Model.findOne({ title });
 
@@ -94,12 +92,11 @@ const getProjectById = async(projectId) => {
 const updateProject = async(projectId, {title, description, dueDate}) => {
   const updateProject = await Model.findById(projectId);
 
-
   if(!updateProject || updateProject.deletedAt !== null ) {
     throw new Error("Project not found")
   };
 
-  if(updateProject.status === "completed") {
+  if(updateProject.status === "completed" || updateProject.status === "on_hold") {
     throw new Error("Project cannot be updated")
   };
 
@@ -107,7 +104,7 @@ const updateProject = async(projectId, {title, description, dueDate}) => {
     const existingProject = await Model.findOne({ title });
 
     if (existingProject) {
-      throw new Error(`Project with title ${existingProject.title} exists`);
+      throw new Error(`Project with title ${existingProject.title} already exists`);
     }
     updateProject.title = title;
   };
@@ -123,6 +120,7 @@ const updateProject = async(projectId, {title, description, dueDate}) => {
   await updateProject.save();
   return updateProject;
 };
+
 
 const updateStatus = async(projectId, {status, blocker, expectedResumeDate}) => {
   const fetchProject = await Model.findById(projectId);
@@ -158,21 +156,22 @@ const updateStatus = async(projectId, {status, blocker, expectedResumeDate}) => 
       throw new Error("Project must have a due date");
     };
 
-      fetchStatus = status;
+      fetchProject.status = status;
       fetchProject.startedAt = Date.now();
   }
 
   //active to on-hold
-   else if(fetchStatus === "active" && status === "on-hold") {
+   else if(fetchStatus === "active" && status === "on_hold") {
     fetchProject.blocker = blocker;
     fetchProject.expectedResumeDate = expectedResumeDate;
-    fetchStatus = status;
+    fetchProject.status = status;
    }
 
    //on-hold to active
-   else if(fetchStatus === "on-hold" && status === "active") {
-    fetchProject.blocker = null
-    fetchStatus = status;
+   else if(fetchStatus === "on_hold" && status === "active") {
+    fetchProject.blocker = null;
+    fetchProject.expectedResumeDate = null;
+    fetchProject.status = status;
    }
 
    //active to completed
@@ -181,7 +180,7 @@ const updateStatus = async(projectId, {status, blocker, expectedResumeDate}) => 
       throw new Error("All task must be completed")
     };
 
-    fetchStatus = status;
+    fetchProject.status = status;
     fetchProject.completedAt = Date.now()
    } else {
     throw new Error("Not allowed")

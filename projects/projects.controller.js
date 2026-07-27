@@ -2,7 +2,6 @@ const Services = require("./projects.service");
 const {createProjectJoi, updateProjectJoi, updateStatusJoi} = require("./projects.middleware");
 const logger = require("../logger/winston");
 
-//when you are done creating members and invitations, make sure to test these endpoints again, do not forget testing them when a project has been deleted
 const createProject = async(req, res) => {
     try {
         const ownerId = req.user.id;

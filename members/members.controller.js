@@ -94,7 +94,7 @@ const removeMember = async(req, res) => {
 
       if (
         err && [
-          err.message.includes("Forbidden") || err.message.includes("allowed"),
+          err.message.includes("Forbidden") || err.message.includes("allowed") || err.message.includes("continue")
         ]
       ) {
         logger.warn(err.message);
@@ -138,7 +138,7 @@ const leaveProject = async(req, res) => {
         });
       }
 
-      if (err && err.message.includes("cannot leave")) {
+      if (err && err.message.includes("continue")) {
         logger.warn(err.message);
         return res.status(409).json({
           message: err.message,

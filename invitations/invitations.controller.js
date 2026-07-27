@@ -23,7 +23,7 @@ const createInvitation = async(req, res) => {
     });
 
     }catch(err) {
-        if(err && [err.message.includes("Invitation") || err.message.includes("allowed") || err.message.includes("belongs")]) {
+        if(err && [err.message.includes("Invitation") || err.message.includes("allowed") || err.message.includes("belongs")] || err.message.includes("continue")) {
             logger.warn(err.message);
             return res.status(409).json({
                 message: err.message
@@ -74,7 +74,7 @@ const sendInvitation = async(req, res) => {
             });
         };
 
-        if(err && [err.message.includes("allowed") || err.message.includes("cannot send")]) {
+        if(err && [err.message.includes("allowed") || err.message.includes("continue")]) {
             logger.warn(err.message);
             return res.status(409).json({
                 message: err.message
@@ -99,6 +99,13 @@ const getInvitation = async(req, res) => {
             data: response
         });
     }catch(err) {
+        if(err && err.message.includes("continue")) {
+            logger.warn(err.message);
+            return res.status(409).json({
+                message: err.message
+            });
+        };
+
         logger.error(err.message);
         res.status(500).json({
             message: "Internal server error",
@@ -111,8 +118,9 @@ const acceptInvitation = async(req, res) => {
     try {
         const token = req.query.token;
         const userId = req.user.id;
+        const projectId = req.params.id;
 
-        await Services.acceptInvitation(token, userId);
+        await Services.acceptInvitation(token, userId, projectId);
         logger.info("Invitation accepted");
 
         return res.status(200).json({
@@ -135,11 +143,14 @@ const acceptInvitation = async(req, res) => {
             });
         };
 
-        if(err && err.message.includes("exists")) {
-            logger.warn(err.message);
-            return res.status(409).json({
-                message: err.message
-            });
+        if (
+          err && [
+            err.message.includes("exists") || err.message.includes("continue")]
+        ) {
+          logger.warn(err.message);
+          return res.status(409).json({
+            message: err.message,
+          });
         };
 
         logger.error(err.message);
@@ -154,8 +165,9 @@ const rejectInvitation = async(req, res) => {
     try {
         const token = req.query.token;
         const userId = req.user.id;
+        const projectId = req.params.id;
 
-        await Services.rejectInvitation(token, userId);
+        await Services.rejectInvitation(token, userId, projectId);
         logger.info("Invitation has been rejected");
 
         return res.status(200).json({
@@ -171,13 +183,14 @@ const rejectInvitation = async(req, res) => {
 
       if (
         err && [
-            err.message.includes("expired") ||
+          err.message.includes("expired") ||
             err.message.includes("yours") ||
-            err.message.includes("valid"),
+            err.message.includes("valid") ||
+            err.message.includes("continue")
         ]
       ) {
         logger.warn(err.message);
-        return res.status(400).json({
+        return res.status(409).json({
           message: err.message,
         });
       }
@@ -193,8 +206,9 @@ const rejectInvitation = async(req, res) => {
 const revokeInvitation = async(req, res) => {
     try {
         const invitationId = req.params.invitationId;
+        const projectId = req.params.id;
 
-        const response = await Services.revokeInvitation(invitationId);
+        const response = await Services.revokeInvitation(invitationId, projectId);
         logger.info("Invitation revoked");
 
         return res.status(201).json({
@@ -209,11 +223,17 @@ const revokeInvitation = async(req, res) => {
             });
         };
 
-        if(err && [err.message.includes("revoked") || err.message.includes("expired")]) {
-            logger.warn(err.message);
-            return res.status(409).json({
-                message: err.message
-            });
+        if (
+          err && [
+            err.message.includes("revoked") ||
+              err.message.includes("expired") ||
+              err.message.includes("continue"),
+          ]
+        ) {
+          logger.warn(err.message);
+          return res.status(409).json({
+            message: err.message,
+          });
         };
 
         if(err && err.message.includes("Invalid")) {
@@ -233,6 +253,7 @@ const revokeInvitation = async(req, res) => {
 const rescheduleInvitation = async(req, res) => {
     try {
         const invitationId = req.params.invitationId;
+        const projectId = req.params.id;
         const {value, error} = joi.rescheduleInvitationJoi.validate(req.body);
 
         if(error) {
@@ -241,7 +262,7 @@ const rescheduleInvitation = async(req, res) => {
                 message: error.message
             });
         };
-        const response = await Services.rescheduleInvitation(invitationId, value);
+        const response = await Services.rescheduleInvitation(invitationId, projectId, value);
         logger.info("Invitation rescheduled");
 
         return res.status(201).json({
@@ -256,11 +277,16 @@ const rescheduleInvitation = async(req, res) => {
                 });
             };
 
-            if(err && err.message.includes("rescheduled")) {
-                logger.warn(err.message);
-                return res.status(409).json({
-                    message: err.message
-                });
+            if (
+              err && [
+                err.message.includes("rescheduled") ||
+                  err.message.includes("continue"),
+              ]
+            ) {
+              logger.warn(err.message);
+              return res.status(409).json({
+                message: err.message,
+              });
             };
             logger.error(err.message);
             res.status(500).json({
@@ -299,7 +325,13 @@ const resendInvitation = async(req, res) => {
         });
       }
 
-      if (err && [err.message.includes("allowed") || err.message.includes("resent")]) {
+      if (
+        err && [
+          err.message.includes("allowed") ||
+            err.message.includes("resent") ||
+            err.message.includes("continue"),
+        ]
+      ) {
         logger.warn(err.message);
         return res.status(409).json({
           message: err.message,
@@ -403,11 +435,19 @@ const updateInvitation = async(req, res) => {
             });
         };
 
-        if(err && [err.message.includes("updated") || err.message.includes("allowed") || err.message.includes("greater than")]) {
-            logger.warn(err.message);
-            return res.status(409).json({
-                message: err.message
-            });
+        if (
+          err && [
+            err.message.includes("updated") ||
+              err.message.includes("allowed") ||
+              err.message.includes("greater than") ||
+              err.message.includes("cannot") ||
+              err.message.includes("continue")
+          ]
+        ) {
+          logger.warn(err.message);
+          return res.status(409).json({
+            message: err.message,
+          });
         };
 
         if(err && err.message.includes("Invalid")) {
@@ -428,8 +468,9 @@ const updateInvitation = async(req, res) => {
 const deleteInvitation = async(req, res) => {
     try {
         const invitationId = req.params.invitationId;
+        const projectId = req.params.id;
 
-        await Services.deleteInvitation(invitationId);
+        await Services.deleteInvitation(invitationId, projectId);
         logger.info("Invitation deleted successfully");
 
         return res.status(204).json({
@@ -445,11 +486,15 @@ const deleteInvitation = async(req, res) => {
             });
         };
 
-        if (err && err.message.includes("deleted")) {
-            logger.warn(err.message);
-            return res.status(409).json({
-                message: err.message
-            });
+        if (
+          err && [
+            err.message.includes("deleted") || err.message.includes("continue"),
+          ]
+        ) {
+          logger.warn(err.message);
+          return res.status(409).json({
+            message: err.message,
+          });
         };
         logger.error(err.message);
           res.status(500).json({

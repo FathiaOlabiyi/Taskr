@@ -16,12 +16,12 @@ const updateProjectJoi = joi.object({
 const updateStatusJoi = joi.object({
   status: joi.string().required(),
   blocker: joi.when("status", {
-    is: "on-hold",
+    is: "on_hold",
     then: joi.string().required(),
     otherwise: joi.forbidden(),
   }),
   expectedResumeDate: joi.when("status", {
-    is: "on-hold",
+    is: "on_hold",
     then: joi.date().greater("now").required(),
     otherwise: joi.forbidden(),
   }),

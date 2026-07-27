@@ -28,11 +28,8 @@ const updateStatusJoi = joi.object({
   }),
 });
 
-const memberIdJoi = joi.string().required();
-
 module.exports = {
     createTaskJoi,
     updateTaskJoi,
-    updateStatusJoi,
-    memberIdJoi
+    updateStatusJoi
 };

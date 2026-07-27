@@ -23,7 +23,7 @@ const createTask = async(req, res) => {
         });
 
     }catch(err) {
-      if (err && err.message.includes("exists")) {
+      if (err && [err.message.includes("exists") || err.message.includes("continue")]) {
         logger.warn(err.message);
         return res.status(409).json({
           message: err.message,
@@ -118,7 +118,6 @@ const getTasksAssignedToMember = async(req, res) => {
 const getTaskById = async(req, res) => {
     try {
         const taskId = req.params.taskId;
-        console.log(taskId);
 
         const response = await Services.getTaskById(taskId);
         logger.info("Task returned successfully");
@@ -153,6 +152,7 @@ const updateTask = async(req, res) => {
     try {
         const userId = req.user.id;
         const taskId = req.params.taskId;
+        const projectId = req.params.id
         const {value, error} = updateTaskJoi.validate(req.body);
 
         if(error) {
@@ -162,7 +162,7 @@ const updateTask = async(req, res) => {
             });
         };
         
-        const response = await Services.updateTask(userId, taskId, value);
+        const response = await Services.updateTask(projectId, userId, taskId, value);
         logger.info("Task update successful");
 
         return res.status(201).json({
@@ -172,7 +172,7 @@ const updateTask = async(req, res) => {
     }catch(err) {
       if (
         err && [
-          err.message.includes("updated") || err.message.includes("exists"),
+          err.message.includes("updated") || err.message.includes("exists") || err.message.includes("continue"),
         ]
       ) {
         logger.warn(err.message);
@@ -200,6 +200,7 @@ const updateStatus = async(req, res) => {
     try {
         const userId = req.user.id;
         const taskId = req.params.taskId;
+        const projectId = req.params.id;
         const {value, error} = updateStatusJoi.validate(req.body);
 
         if(error) {
@@ -208,7 +209,7 @@ const updateStatus = async(req, res) => {
                 message: error.message
             });
         }
-        const response = await Services.updateStatus(userId, taskId, value);
+        const response = await Services.updateStatus(projectId, userId, taskId, value);
         logger.info("Task status update successful");
         return res.status(201).json({
             message: "Update successful",
@@ -222,7 +223,7 @@ const updateStatus = async(req, res) => {
             });
         };
 
-        if(err && [err.message.includes("is already in this state") || err.message.includes("must") || err.message.includes("allowed")] || err.message.includes("still in todo")) {
+        if(err && [err.message.includes("is already in this state") || err.message.includes("must") || err.message.includes("allowed")] || err.message.includes("still in todo") || err.message.includes("continue")) {
             logger.warn(err.message);
             return res.status(409).json({
                 message: err.message
@@ -241,12 +242,22 @@ const deleteTask = async(req, res) => {
     try {
         const userId = req.user.id;
         const taskId = req.params.taskId;
+        const projectId = req.params.id;
 
+        await Services.deleteTask(projectId, userId, taskId);
         logger.info("Task deleted successfully");
         return res.status(204).json({
             message: "Deleted successfully"
         });
     }catch(err) {
+
+        if(err && err.message.includes("continue")) {
+            logger.warn(err.message);
+            return res.status(409).json({
+                message: err.message
+            });
+        };
+
         if(err && err.message.includes("not found")) {
             logger.warn(err.message);
             return res.status(404).json({
@@ -266,16 +277,10 @@ const assignTask = async(req, res) => {
     try {
         const taskId = req.params.taskId;
         const userId = req.user.id;
-        const {value, error} = memberIdJoi.validate(req.body);
+        const projectId = req.params.id
+        const memberId = req.body.memberId;
 
-        if(error) {
-            logger.warn(error.message);
-            return res.status(400).json({
-                message: error.message
-            });
-        };
-
-        const response = await Services.assignTask(taskId, userId, value);
+        const response = await Services.assignTask(projectId, taskId, userId, memberId);
         logger.info("Task assigned successfully");
 
         return res.status(201).json({
@@ -290,12 +295,19 @@ const assignTask = async(req, res) => {
             });
         };
 
-        if(err && err.message.includes("cannot be reassigned")) {
+        if(err && [err.message.includes("cannot be reassigned") || err.message.includes("continue")]) {
             logger.warn(err.message);
             return res.status(409).json({
                 message: err.message
             });
         };
+
+      if (err && err.message.includes("Invalid")) {
+        logger.warn(err.message);
+        return res.status(400).json({
+          message: err.message,
+        });
+      }
 
         logger.error(err.message);
         res.status(500).json({
@@ -307,9 +319,10 @@ const assignTask = async(req, res) => {
 
 const unassignTask = async(req, res) => {
     try {
-        const taskId = re.params.taskId;
+        const taskId = req.params.taskId;
+        const projectId = req.params.id; 
 
-        const response = await Services.unassignTask(taskId);
+        const response = await Services.unassignTask(projectId, taskId);
         logger.info("Task unassigned");
 
         return res.status(201).json({
@@ -324,7 +337,7 @@ const unassignTask = async(req, res) => {
             });
         };
 
-        if(err && err.message.includes("unassigned")) {
+        if(err && [err.message.includes("unassigned") || err.message.includes("continue")]) {
             logger.warn(err.message);
             return res.status(409).json({
                 message: err.message

@@ -10,7 +10,7 @@ const generateToken = (id) => {
 
 const signUp = async({firstname, lastname, username, email, password, profilePicture}) => {
     const existingUser = await Model.findOne({email});
-    if(existingUser && existingUser.isDeleted == true) {
+    if(existingUser && existingUser.isDeleted === true) {
       throw new Error("User account exists but deleted, retrive to continue")
     };
 
@@ -27,11 +27,11 @@ const signUp = async({firstname, lastname, username, email, password, profilePic
 const verifyUserEmail = async(email, token) => {
   const user = await Model.findOne({email: email, isDeleted: false});
 
-  if (!user || user.isDeleted == true) {
+  if (!user || user.isDeleted === true) {
     throw new Error("User not found");
   }
 
-  if (user.isVerified == true) {
+  if (user.isVerified === true) {
     throw new Error("User already verified");
   }
 
@@ -62,11 +62,11 @@ const verifyUserEmail = async(email, token) => {
 const resendEmailVerificationLink = async({email}) => {
   const user = await Model.findOne({email: email, isDeleted: false});
 
-  if (!user || user.isDeleted == true) {
+  if (!user || user.isDeleted === true) {
     throw new Error("User not found");
   }
 
-  if (user.isVerified == true) {
+  if (user.isVerified === true) {
     throw new Error("User already verified");
   }
 
@@ -76,15 +76,15 @@ const resendEmailVerificationLink = async({email}) => {
 const signIn = async({email, password}) => {
     const user = await Model.findOne({email: email, isDeleted: false});
 
-    if(!user || user.isDeleted == true) {
+    if(!user || user.isDeleted === true) {
         throw new Error("User not found");
     };
 
-    if(!user.password || user.authProvider == "google") {
+    if(!user.password || user.authProvider === "google") {
         throw new Error("This account was created with Google. Please signIn with Google")
     };
 
-    if(user.isVerified == false) {
+    if(user.isVerified === false) {
         throw new Error("User not verified, verify user before login")
     };
 
@@ -102,17 +102,17 @@ const signIn = async({email, password}) => {
 const forgotPassword = async({email}) => {
   const user = await Model.findOne({email: email, isDeleted: false});
 
-  if(!user || user.isDeleted == true) {
+  if(!user || user.isDeleted === true) {
     throw new Error("User not found")
   };
 
-  if (!user.password || user.authProvider == "google") {
+  if (!user.password || user.authProvider === "google") {
     throw new Error(
       "This account was created with Google.",
     );
   }
 
-  if (user.isVerified == false) {
+  if (user.isVerified === false) {
     throw new Error("User not verified, verify user to continue");
   }
 
@@ -122,11 +122,11 @@ const forgotPassword = async({email}) => {
 const resetPassword = async({email, token}, {newPassword}) => {
   const user = await Model.findOne({email: email, isDeleted: false});
 
-  if (!user || user.isDeleted == true) {
+  if (!user || user.isDeleted === true) {
     throw new Error("User not found");
   }
   
-  if (!user.password || user.authProvider == "google") {
+  if (!user.password || user.authProvider === "google") {
     throw new Error("This account was created with Google.");
   }
 
@@ -139,10 +139,7 @@ const resetPassword = async({email, token}, {newPassword}) => {
     Date.now() > user.passwordResetTokenExpiredAt
   ) {
     throw new Error("Token expired");
-  }
-
-
-
+  };
   const compareToken = await bcrypt.compare(
     token,
     user.passwordResetToken || "",
@@ -166,7 +163,7 @@ const deleteAccount = async(userId) => {
         throw new Error("User not found")
     };
 
-    if(user.isDeleted == true && user.deletedAt != null) {
+    if(user.isDeleted === true && user.deletedAt !== null) {
         throw new Error("User has already been deleted")
     };
 

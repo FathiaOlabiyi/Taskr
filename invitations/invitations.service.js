@@ -10,6 +10,16 @@ const crypto = require("crypto");
 const agenda = require("../config/agenda");
 
 const createInvitation = async(projectId, {email, roleId, scheduleSend}, userId) => {
+
+      const getProjectStatus = await projectModel.findById(projectId);
+  
+      if (
+        getProjectStatus.status === "completed" ||
+        getProjectStatus.status === "on_hold"
+      ) {
+        throw new Error(`Cannot continue, project ${getProjectStatus.status}`);
+      }
+
   const existingInvitation = await Model.findOne({
     projectId,
     inviteeEmail: email,
@@ -22,6 +32,10 @@ const createInvitation = async(projectId, {email, roleId, scheduleSend}, userId)
     if(email === ownerEmail) {
       throw new Error("Email belongs to owner")
     };
+
+      if (!mongoose.Types.ObjectId.isValid(roleId)) {
+        throw new Error("Invalid role ID format");
+      }
 
     //get caller's role
     const findCallerRoleId = await memberModel.findOne({projectId, userId, deletedAt: null});
@@ -76,6 +90,16 @@ const createInvitation = async(projectId, {email, roleId, scheduleSend}, userId)
 
 const sendInvitation = async(invitationId, userId, projectId) => {
 
+      const getProjectStatus = await projectModel.findById(projectId);
+  
+      if (
+        getProjectStatus.status === "completed" ||
+        getProjectStatus.status === "on_hold"
+      ) {
+        throw new Error(`Cannot continue, project ${getProjectStatus.status}`);
+      }
+
+
     if (!mongoose.Types.ObjectId.isValid(invitationId)) {
       throw new Error("Invalid invitation ID format");
     }
@@ -107,6 +131,7 @@ const sendInvitation = async(invitationId, userId, projectId) => {
 };
 
 const getInvitationByToken = async(token) => {
+
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
   const invitation = await Model.findOne({token: hashedToken});
@@ -131,10 +156,22 @@ const getInvitationByToken = async(token) => {
 };
 
 const getInvitation = async (token) => {
+
   const invitation = await getInvitationByToken(token);
 
     const projectId = invitation.projectId;
     const roleId = invitation.roleId;
+
+        const getProjectStatus = await projectModel.findById(projectId);
+
+        if (
+          getProjectStatus.status === "completed" ||
+          getProjectStatus.status === "on_hold"
+        ) {
+          throw new Error(
+            `Cannot continue, project ${getProjectStatus.status}`,
+          );
+        };
 
     const getProjectName = await projectModel.findById(projectId);
     if(!getProjectName || getProjectName.deletedAt !== null) {
@@ -153,7 +190,18 @@ const getInvitation = async (token) => {
     };
 };
 
-const acceptInvitation = async (token, userId) => {
+const acceptInvitation = async (token, userId, projectId) => {
+
+  const getProjectStatus = await projectModel.findById(projectId);
+
+  if (
+    getProjectStatus.status === "completed" ||
+    getProjectStatus.status === "on_hold"
+  ) {
+      throw new Error(
+        `Cannot continue, project ${getProjectStatus.status}`,
+      );
+  };
 
   const invitation = await getInvitationByToken(token);
 
@@ -198,14 +246,23 @@ const acceptInvitation = async (token, userId) => {
   };
 };
 
-const rejectInvitation = async (token, userId) => {
+const rejectInvitation = async (token, userId, projectId) => {
+  const getProjectStatus = await projectModel.findById(projectId);
+
+  if (
+    getProjectStatus.status === "completed" ||
+    getProjectStatus.status === "on_hold"
+  ) {
+    throw new Error(`Cannot continue, project ${getProjectStatus.status}`);
+  };
+
   const invitation = await getInvitationByToken(token);
 
   const user = await authModel.findById(userId);
 
   if (!user || user.deletedAt !== null) {
     throw new Error("User not found");
-  };
+  }
 
   if (user.email !== invitation.inviteeEmail) {
     throw new Error("This invitation is not yours.");
@@ -219,7 +276,15 @@ const rejectInvitation = async (token, userId) => {
   return invitation;
 };
 
-const revokeInvitation = async(invitationId) => {
+const revokeInvitation = async(invitationId, projectId) => {
+  const getProjectStatus = await projectModel.findById(projectId);
+
+  if (
+    getProjectStatus.status === "completed" ||
+    getProjectStatus.status === "on_hold"
+  ) {
+    throw new Error(`Cannot continue, project ${getProjectStatus.status}`);
+  };
 
   if (!mongoose.Types.ObjectId.isValid(invitationId)) {
     throw new Error("Invalid invitation ID format");
@@ -246,7 +311,18 @@ const revokeInvitation = async(invitationId) => {
   return getInvitation;
 };
 
-const rescheduleInvitation = async(invitationId, {scheduleSend}) => {
+const rescheduleInvitation = async(invitationId, projectId, {scheduleSend}) => {
+
+  const getProjectStatus = await projectModel.findById(projectId);
+
+  if (
+    getProjectStatus.status === "completed" ||
+    getProjectStatus.status === "on_hold"
+  ) {
+      throw new Error(
+        `Cannot continue, project ${getProjectStatus.status}`,
+      );
+  };
 
     if (!mongoose.Types.ObjectId.isValid(invitationId)) {
       throw new Error("Invalid invitation ID format");
@@ -274,6 +350,17 @@ const rescheduleInvitation = async(invitationId, {scheduleSend}) => {
 };
 
 const resendInvitation = async(invitationId, userId, projectId) => {
+
+  const getProjectStatus = await projectModel.findById(projectId);
+
+  if (
+    getProjectStatus.status === "completed" ||
+    getProjectStatus.status === "on_hold"
+  ) {
+      throw new Error(
+        `Cannot continue, project ${getProjectStatus.status}`,
+      );
+  };
 
   if (!mongoose.Types.ObjectId.isValid(invitationId)) {
     throw new Error("Invalid invitation ID format");
@@ -337,6 +424,17 @@ const getInvitationById = async(invitationId) => {
 
 const updateInvitation = async(projectId, invitationId, {roleId, inviteeEmail}) => {
 
+  const getProjectStatus = await projectModel.findById(projectId);
+
+  if (
+    getProjectStatus.status === "completed" ||
+    getProjectStatus.status === "on_hold"
+  ) {
+      throw new Error(
+        `Cannot continue, project ${getProjectStatus.status}`,
+      );
+  };
+
     if (!mongoose.Types.ObjectId.isValid(invitationId)) {
       throw new Error("Invalid invitation ID format");
     }
@@ -374,7 +472,18 @@ const updateInvitation = async(projectId, invitationId, {roleId, inviteeEmail}) 
   return getInvitation;
 };
 
-const deleteInvitation = async(invitationId) => {
+const deleteInvitation = async(invitationId, projectId) => {
+
+  const getProjectStatus = await projectModel.findById(projectId);
+
+  if (
+    getProjectStatus.status === "completed" ||
+    getProjectStatus.status === "on_hold"
+  ) {
+      throw new Error(
+        `Cannot continue, project ${getProjectStatus.status}`,
+      );
+  };
 
       if (!mongoose.Types.ObjectId.isValid(invitationId)) {
         throw new Error("Invalid invitation ID format");

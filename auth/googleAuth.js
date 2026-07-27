@@ -23,7 +23,7 @@ passport.use(
       try {
         let user = await Model.findOne({ googleId: profile.id });
         if (user) {
-          if (user.deletedAt != null || user.isDeleted == true) {
+          if (user.deletedAt != null || user.isDeleted === true) {
             logger.warn("This account was previously deleted, restore account to continue");
             throw new Error("This account was previously deleted, restore account to continue");
           }

@@ -1,9 +1,16 @@
 const Model = require("./tasks.model");
 const memberModel = require("../members/members.model");
 const roleModel = require("../Admin/roles.model");
+const projectModel = require("../projects/projects.model");
 const mongoose = require("mongoose");
 
 const createTask = async(userId, projectId, {title, description, priority, dueDate}) => {
+
+  const getProjectStatus = await projectModel.findById(projectId);
+
+  if(getProjectStatus.status === "completed" || getProjectStatus.status === "on_hold") {
+    throw new Error(`Cannot continue, peoject ${getProjectStatus.status}`)
+  } ;
 
     const existingTask = await Model.findOne({title});
 
@@ -75,7 +82,7 @@ const getAllTasks = async(projectId, userId, status, title, priority, assigned, 
   };
 
   if(assignedTo === "me") {
-    const member = await memberModel.findOne({projectId, userId});
+    const member = await memberModel.findOne({projectId, userId, deletedAt: null});
 
     if(!member) {
       throw new Error("Member not found");
@@ -120,7 +127,7 @@ const getTaskAssignedToMember = async (projectId, memberId) => {
 
 const getTaskById = async(taskId) => {
     if (!mongoose.Types.ObjectId.isValid(taskId)) {
-      throw new Error("Invalid member ID format");
+      throw new Error("Invalid task ID format");
     };
 
   const getTask = await Model.findById(taskId);
@@ -131,30 +138,48 @@ const getTaskById = async(taskId) => {
   return getTask;
 };
 
-const updateTask = async(userId, taskId, {title, description, priority, dueDate}) => {
+const updateTask = async(projectId, userId, taskId, {title, description, priority, dueDate}) => {
+
+  if (!mongoose.Types.ObjectId.isValid(taskId)) {
+    throw new Error("Invalid task ID format");
+  }
+
+  const getProjectStatus = await projectModel.findById(projectId);
+
+  if (
+    getProjectStatus.status === "completed" ||
+    getProjectStatus.status === "on_hold"
+  ) {
+    throw new Error(`Cannot continue, project ${getProjectStatus.status}`);
+  }
 
   const getTask = await Model.findById(taskId);
-  const getMemberId = await memberModel.find({ userId });
+
+    if (!getTask || getTask.deletedAt !== null) {
+      throw new Error("Task not found");
+    };
+
+  const getMemberId = await memberModel.find({ userId, projectId, deletedAt: null });
   const memberId = getMemberId._id;
   const getMemberRole = getMemberId.role;
 
   const getRole = await roleModel.findOne(getMemberRole);
   const roleName = getRole.name;
 
-  if (!getTask || getTask.deletedAt !== null) {
-    throw new Error("Task not found");
+
+  if (
+    memberId !== getTask.assignedTo &&
+    roleName !== "Owner" &&
+    roleName !== "Project Manager"
+  ) {
+    throw new Error("You do not have permission");
   }
 
-  if (memberId !== getTask.assignedTo && roleName !== "Owner" && roleName !== "Project Manager") {
-    throw new Error("You do not have permission");
-  };
-
-  if (getTask.status == "completed" || getTask.status == "review") {
+  if (getTask.status === "completed" || getTask.status === "review") {
     throw new Error("Task cannot be updated");
   }
 
   if (title) {
-    console.log(title);
     const existingTask = await Model.findOne({ title });
 
     if (existingTask) {
@@ -180,21 +205,35 @@ const updateTask = async(userId, taskId, {title, description, priority, dueDate}
   return getTask;
 };
 
-const updateStatus = async(userId, taskId, {status, blocker, expectedResumeDate}) => {
+const updateStatus = async(projectId, userId, taskId, {status, blocker, expectedResumeDate}) => {
+
+    if (!mongoose.Types.ObjectId.isValid(taskId)) {
+      throw new Error("Invalid task ID format");
+    }
+
+    const getProjectStatus = await projectModel.findById(projectId);
+
+    if (
+      getProjectStatus.status === "completed" ||
+      getProjectStatus.status === "on_hold"
+    ) {
+      throw new Error(`Cannot continue, project ${getProjectStatus.status}`);
+    }
+  
+
   const fetchTask = await Model.findById(taskId);
-  console.log(fetchTask);
+
+  if (!fetchTask || fetchTask.deletedAt !== null) {
+    throw new Error("Task not found");
+  }
   const fetchStatus = fetchTask.status;
 
-  const getMemberId = await memberModel.find({ userId });
+  const getMemberId = await memberModel.find({ userId, projectId, deletedAt: null });
   const memberId = getMemberId._id;
   const getMemberRole = getMemberId.role;
 
   const getRole = await roleModel.findOne(getMemberRole);
   const roleName = getRole.name;
-
-    if (!fetchTask || fetchTask.deletedAt !== null) {
-      throw new Error("Task not found");
-    };
 
   if (
     memberId != fetchTask.assignedTo &&
@@ -217,7 +256,7 @@ const updateStatus = async(userId, taskId, {status, blocker, expectedResumeDate}
     if (fetchTask.dueDate == null) {
       throw new Error("Task must have a due date");
     }
-    fetchStatus = status;
+    fetchTask.status = status;
     fetchTask.startedAt = Date.now();
   }
 
@@ -225,47 +264,56 @@ const updateStatus = async(userId, taskId, {status, blocker, expectedResumeDate}
   else if (fetchStatus == "in-progress" && status == "on-hold") {
     fetchTask.blocker = blocker;
     fetchTask.expectedResumeDate = expectedResumeDate;
-    fetchStatus = status;
+    fetchTask.status = status;
   }
 
   //on-hold to in-progress
   else if (fetchStatus == "on-hold" && status == "in-progress") {
     fetchTask.blocker = null;
-    fetchStatus = status;
+    fetchTask.status = status;
   }
 
   //in-progress to review
   else if (fetchStatus == "in-progress" && status == "review") {
-    fetchStatus = status;
+    fetchTask.status = status;
   }
 
   //review to in-progress
   else if (fetchStatus == "review" && status == "in-progress") {
-    fetchStatus = status;
+    fetchTask.status = status;
   }
 
   //in-progress to completed
   else if (fetchStatus == "review" && status == "completed") {
-    if (completeTask) {
-      throw new Error("All task must be completed");
-    }
 
-    fetchStatus = status;
+    fetchTask.status = status;
     fetchTask.completedAt = Date.now();
-  }
-  else if(fetchStatus === "todo" && status !== "in=progress") {
-
+  } else if (fetchStatus === "todo" && status !== "in-progress") {
     throw new Error("Task still in todo, not in progress yet");
-    
   } else {
     throw new Error("Not allowed");
   }
 
   fetchTask.updatedBy = memberId;
   await fetchTask.save();
+
+  return fetchTask;
 };
 
-const deleteTask = async(userId, taskId) => {
+const deleteTask = async(projectId, userId, taskId) => {
+
+    if (!mongoose.Types.ObjectId.isValid(taskId)) {
+      throw new Error("Invalid task ID format");
+    }
+
+    const getProjectStatus = await projectModel.findById(projectId);
+
+    if (
+      getProjectStatus.status === "completed" ||
+      getProjectStatus.status === "on_hold"
+    ) {
+      throw new Error(`Cannot continue, project ${getProjectStatus.status}`);
+    }
     const deleteTask = await Model.findById(taskId);
 
     if (!deleteTask || deleteTask.deletedAt != null) {
@@ -274,60 +322,93 @@ const deleteTask = async(userId, taskId) => {
     
     deleteTask.deletedAt = Date.now();
     
-    const getMemberId = await memberModel.find({ userId });
+    const getMemberId = await memberModel.find({ userId, projectId, deletedAt: null });
     const memberId = getMemberId._id;
     getTask.deletedBy = memberId;
     await deleteTask.save();
 };
 
-const assignTask = async(taskId, userId, memberId) => {
-    const getTask = await Model.findById(taskId);
-    const getMemberToAssign = await memberModel.findById(memberId);
+const assignTask = async(projectId, taskId, userId, memberId) => {
 
-    const memberRole = getMemberToAssign.role;
-    const getRoleName = await roleModel.findById(memberRole);
-    const roleName = getRoleName.name;
+  if (!mongoose.Types.ObjectId.isValid(taskId)) {
+    throw new Error("Invalid task ID format");
+  };
 
-    if (!getTask || getTask.deletedAt != null) {
-        throw new Error("Task not found");
-    };
+    const getProjectStatus = await projectModel.findById(projectId);
 
-    if (getTask.status == "completed" || getTask.status == "review") {
-        throw new Error("Task cannot be reassigned");
-    };
+    if (
+      getProjectStatus.status === "completed" ||
+      getProjectStatus.status === "on_hold"
+    ) {
+      throw new Error(`Cannot continue, project ${getProjectStatus.status}`);
+    }
 
-    if (!getMemberToAssign || getMemberToAssign.deletedAt != null) {
+  const getTask = await Model.findById(taskId);
+
+    if (!getTask || getTask.deletedAt !== null) {
+      throw new Error("Task not found");
+    }
+
+  const getMemberToAssign = await memberModel.findById(memberId);
+
+    if (!getMemberToAssign || getMemberToAssign.deletedAt !== null) {
       throw new Error("Member not found");
-    };
+    }
 
-    if(roleName != "Member") {
-      throw new Error(`A ${roleName} cannot be assigned tasks`)
-    };
+  const memberRole = getMemberToAssign.role;
+  const getRoleName = await roleModel.findById(memberRole);
+  const roleName = getRoleName.name;
 
-    const getId = await memberModel.find({ userId });
-    const id = getId._id;
+  if (getTask.status === "completed" || getTask.status === "review") {
+    throw new Error("Task cannot be reassigned");
+  }
+
+  if (roleName !== "Member") {
+    throw new Error(`${roleName} cannot be assigned tasks`);
+  }
+
+  const getId = await memberModel.findOne({
+    projectId,
+    userId,
+    deletedAt: null,
+  });
+  const id = getId._id;
 
   getTask.assignedTo = memberId;
   getTask.updatedBy = id;
   getTask.save();
 };
 
-const unassignTask = async(taskId) => {
+const unassignTask = async(projectId, taskId) => {
+
+    if (!mongoose.Types.ObjectId.isValid(taskId)) {
+      throw new Error("Invalid task ID format");
+    }
+
+    const getProjectStatus = await projectModel.findById(projectId);
+
+    if (
+      getProjectStatus.status === "completed" ||
+      getProjectStatus.status === "on_hold"
+    ) {
+      throw new Error(`Cannot continue, project ${getProjectStatus.status}`);
+    }
+
   const getTask = await Model.findById(taskId);
 
-  if (!getTask || getTask.deletedAt != null) {
+  if (!getTask || getTask.deletedAt !== null) {
     throw new Error("Task not found");
   };
 
-  if (getTask.status == "completed" || getTask.status == "review" || getTask.status == "in-progress") {
+  if (getTask.status === "completed" || getTask.status === "review" || getTask.status === "in-progress") {
     throw new Error("Task cannot be unassigned");
   };
 
-  if (getTask.assignedTo == null) {
+  if (getTask.assignedTo === null) {
     throw new Error("Task already unassigned");
   };
 
-    const getId = await memberModel.find({ userId });
+    const getId = await memberModel.findOne({userId, projectId, deletedAt: null});
     const id = getId._id;
 
   getTask.assignedTo = null;

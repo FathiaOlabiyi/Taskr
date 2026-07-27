@@ -45,6 +45,17 @@ const getMemberById = async(memberId) => {
 
 const removeMember = async(userId, memberId, projectId) => {
 
+  const getProjectStatus = await projectModel.findById(projectId);
+
+  if (
+    getProjectStatus.status === "completed" ||
+    getProjectStatus.status === "on_hold"
+  ) {
+      throw new Error(
+        `Cannot continue, project ${getProjectStatus.status}`,
+      );
+  };
+
   if (!mongoose.Types.ObjectId.isValid(memberId)) {
     throw new Error("Invalid member ID format");
   }
@@ -87,6 +98,16 @@ const removeMember = async(userId, memberId, projectId) => {
 };
 
 const leaveProject = async(userId, projectId) => {
+
+    const getProjectStatus = await projectModel.findById(projectId);
+  
+    if (
+      getProjectStatus.status === "completed"
+    ) {
+        throw new Error(
+          `cannot continue, project ${getProjectStatus.status}`,
+        );
+    };
 
   const getMembership = await Model.findOne({projectId, userId});
 
