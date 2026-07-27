@@ -70,7 +70,7 @@ const getAllProjects = async(userId, status, type, title)  => {
     populate.match.title = query.title
   };
 
-  const getProjects = await memberModel.find({userId: userId}).populate(populate);
+  const getProjects = await memberModel.find({userId: userId, deletedAt: null}).populate(populate);
   if(status || type || title) {
 
     return getProjects.filter(a => a.projectId !== null).map(a => a.projectId);

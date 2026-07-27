@@ -498,7 +498,7 @@ const deleteInvitation = async(invitationId, projectId) => {
     if (getInvitation.status === "pending" || getInvitation.status === "accepted" || getInvitation.status === "scheduled") {
       throw new Error("Invitation cannot be deleted");
     }
-
+//make it a permanent deletion
     getInvitation.deletedAt = Date.now();
     await getInvitation.save();
 };

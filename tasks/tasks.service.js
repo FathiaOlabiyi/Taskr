@@ -9,7 +9,7 @@ const createTask = async(userId, projectId, {title, description, priority, dueDa
   const getProjectStatus = await projectModel.findById(projectId);
 
   if(getProjectStatus.status === "completed" || getProjectStatus.status === "on_hold") {
-    throw new Error(`Cannot continue, peoject ${getProjectStatus.status}`)
+    throw new Error(`Cannot continue, project ${getProjectStatus.status}`)
   } ;
 
     const existingTask = await Model.findOne({title});
@@ -20,13 +20,17 @@ const createTask = async(userId, projectId, {title, description, priority, dueDa
 
     const findMember = await memberModel.findOne({projectId, userId, deletedAt: null});
 
+    if(!findMember) {
+      throw new Error("Not a member")
+    };
+
     const createdBy = findMember._id;
 
         const memberRole = findMember.role;
         const getRole = await roleModel.findById(memberRole);
         const role = getRole.name;
 
-        if (role == "Member") {
+        if (role === "Member") {
             const assignedTo = createdBy;
 
             const task = await Model.create({
@@ -82,7 +86,7 @@ const getAllTasks = async(projectId, userId, status, title, priority, assigned, 
   };
 
   if(assignedTo === "me") {
-    const member = await memberModel.findOne({projectId, userId, deletedAt: null});
+    const member = await memberModel.find({projectId, userId, deletedAt: null});
 
     if(!member) {
       throw new Error("Member not found");

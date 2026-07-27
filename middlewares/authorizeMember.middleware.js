@@ -27,7 +27,7 @@ const isMember = async (req, res, next) => {
 
     const checkProject = await projectModel.findById(projectId);
 
-    if(!checkProject || checkProject.deletedAt != null) {
+    if(!checkProject || checkProject.deletedAt !== null) {
       logger.warn("Project not found");
       return res.status(404).json({
         message: "Project not found"
@@ -38,7 +38,7 @@ const isMember = async (req, res, next) => {
       projectId: projectId,
       userId: userId,
     });
-    if (!checkMember || checkMember.deleteAt != null) {
+    if (!checkMember || checkMember.deletedAt !== null) {
       logger.warn("Unauthorized");
       return res.status(403).json({
         message: "Unauthorized"
