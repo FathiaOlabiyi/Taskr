@@ -20,7 +20,10 @@ const verifyEmail = async(user) => {
   const link = `${process.env.APP_URL}/auth/verify-email?email=${encodeURIComponent(user.email)}&token=${token}`;
 
   nodemailer.transporter.sendMail({
-    from: `${process.env.EMAIL_USER}`,
+    from: {
+      name: "Taskr",
+      address: process.env.EMAIL_USER,
+    },
     to: user.email,
     subject: "Email verification",
     text: `Click this link to verify your email ${link}\n\n Link expires in 15 minutes.`,
@@ -41,7 +44,10 @@ const sendPasswordResetToken = async(user) => {
   const resetLink = `${process.env.APP_URL}/auth/reset-password?email=${encodeURIComponent(user.email)}&token=${token}`;
 
     nodemailer.transporter.sendMail({
-      from: `${process.env.EMAIL_USER}`,
+      from: {
+        name: "Taskr",
+        address: process.env.EMAIL_USER,
+      },
       to: user.email,
       subject: "Password Reset",
       text: `Click this to reset password ${resetLink}\n\n Link expires in 15 minutes.`,
