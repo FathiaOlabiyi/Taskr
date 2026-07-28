@@ -56,7 +56,6 @@ const isMember = async (req, res, next) => {
   }
 };
 
-//If i have to delete a role or permission or role permission, i have to come back here
 const hasPermission = (permission) => {
   return async (req, res, next) => {
     try {

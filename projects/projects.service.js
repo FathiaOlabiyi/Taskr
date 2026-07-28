@@ -203,7 +203,6 @@ const deleteProject = async(projectId) => {
       await deleteProject.save({session});
 
       await memberModel.updateMany({projectId: projectId, deletedAt: null}, {$set: {deletedAt: Date.now()}}, {session});
-      //check if the task of a project can be accessed if a project has been deleted, if yes, delete task here too
   });
   session.endSession();
 };

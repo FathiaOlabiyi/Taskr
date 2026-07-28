@@ -74,7 +74,6 @@ const updateProfilePicture = async(req, res) => {
     try {
         const userId = req.user.id;
         const profilePicture = req.file;
-        console.log(profilePicture)
 
         const response = await Services.updateProfilePicture(userId, profilePicture);
         logger.info("Profile picture upload successful");

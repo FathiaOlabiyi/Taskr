@@ -10,66 +10,93 @@ const crypto = require("crypto");
 const agenda = require("../config/agenda");
 
 const createInvitation = async(projectId, {email, roleId, scheduleSend}, userId) => {
+  const getProjectStatus = await projectModel.findById(projectId);
 
-      const getProjectStatus = await projectModel.findById(projectId);
-  
-      if (
-        getProjectStatus.status === "completed" ||
-        getProjectStatus.status === "on_hold"
-      ) {
-        throw new Error(`Cannot continue, project ${getProjectStatus.status}`);
-      }
+  if (
+    getProjectStatus.status === "completed" ||
+    getProjectStatus.status === "on_hold"
+  ) {
+    throw new Error(`Cannot continue, project ${getProjectStatus.status}`);
+  }
 
   const existingInvitation = await Model.findOne({
     projectId,
     inviteeEmail: email,
-    deletedAt: null});
+    deletedAt: null,
+    status: {
+      $in: ["draft", "pending", "accepted", "scheduled"],
+    },
+  });
 
-    //check if email is not owner's email
-    const findOwnerEmail = await authModel.findById(userId);
-    const ownerEmail = findOwnerEmail.email;
+  const getInviteeUserId = await authModel.findOne({
+    email,
+    deletedAt: null,
+  });
+  const inviteeUserId = getInviteeUserId._id;
 
-    if(email === ownerEmail) {
-      throw new Error("Email belongs to owner")
-    };
+  const checkMembership = await memberModel.findOne({
+    projectId,
+    deletedAt: null,
+    userId: inviteeUserId,
+  });
 
-      if (!mongoose.Types.ObjectId.isValid(roleId)) {
-        throw new Error("Invalid role ID format");
-      }
+  if (existingInvitation && checkMembership) {
+    throw new Error("An active invitation already exists for this email");
+  }
 
-    //get caller's role
-    const findCallerRoleId = await memberModel.findOne({projectId, userId, deletedAt: null});
-    const callerRoleId = findCallerRoleId.role;
-    const callerRole = await roleModel.findById(callerRoleId);
-    const callerRoleName = callerRole.name;
+  //check if email is not owner's email
+  const findOwnerEmail = await authModel.findById(userId);
+  const ownerEmail = findOwnerEmail.email;
 
-  if (existingInvitation) {
-    throw new Error("Email already exists");
-  };
+  if (email === ownerEmail) {
+    throw new Error("Email belongs to owner");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(roleId)) {
+    throw new Error("Invalid role ID format");
+  }
+
+  //get caller's role
+  const findCallerRoleId = await memberModel.findOne({
+    projectId,
+    userId,
+    deletedAt: null,
+  });
+  const callerRoleId = findCallerRoleId.role;
+  const callerRole = await roleModel.findById(callerRoleId);
+  const callerRoleName = callerRole.name;
 
   const findRole = await roleModel.findById(roleId);
   if (!findRole || findRole.deletedAt !== null) {
     throw new Error("Role not found");
-  };
+  }
 
   if (findRole.name === "Owner") {
     throw new Error("Not allowed");
-  };
+  }
 
   if (findRole.name === "Project Manager") {
-    if(callerRoleName === "Project Manager") {
-      throw new Error("Not allowed")
-    };
+    if (callerRoleName === "Project Manager") {
+      throw new Error("Not allowed");
+    }
 
-    const projectManager = await memberModel.find({projectId, role: roleId, deletedAt:  null});
+    const projectManager = await memberModel.find({
+      projectId,
+      role: roleId,
+      deletedAt: null,
+    });
 
     if (projectManager.length >= 5) {
       throw new Error("Project Managers cannot be greater than 5");
-    };
-  };
+    }
+  }
 
-  const findUserMemberId = await memberModel.findOne({userId, projectId, deletedAt: null});
-  const userMemberId = findUserMemberId._id
+  const findUserMemberId = await memberModel.findOne({
+    userId,
+    projectId,
+    deletedAt: null,
+  });
+  const userMemberId = findUserMemberId._id;
   const createInvite = await Model.create({
     projectId,
     roleId,
@@ -78,13 +105,15 @@ const createInvitation = async(projectId, {email, roleId, scheduleSend}, userId)
     scheduleSend,
   });
 
-  if(scheduleSend) {
+  if (scheduleSend) {
     createInvite.status = "scheduled";
     await createInvite.save();
     const scheduleDate = createInvite.scheduleSend;
 
-    await agenda.schedule(scheduleDate, "send invitation", {invitationId: createInvite._id});
-  };
+    await agenda.schedule(scheduleDate, "send invitation", {
+      invitationId: createInvite._id,
+    });
+  }
   return createInvite;
 };
 
@@ -498,7 +527,6 @@ const deleteInvitation = async(invitationId, projectId) => {
     if (getInvitation.status === "pending" || getInvitation.status === "accepted" || getInvitation.status === "scheduled") {
       throw new Error("Invitation cannot be deleted");
     }
-    
     getInvitation.deletedAt = Date.now();
     await getInvitation.save();
 };

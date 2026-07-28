@@ -350,7 +350,6 @@ const getInvitations = async(req, res) => {
     try {
         const projectId = req.params.id;
         const status = req.query.status;
-        console.log(status);
 
         const response = await Services.getInvitations(projectId, status);
         logger.info("Invitations returned successfully");
@@ -373,7 +372,6 @@ const getInvitations = async(req, res) => {
 const getInvitationById = async(req, res) => {
     try {
         const invitationId = req.params.invitationId;
-        console.log(invitationId);
 
         const response = await Services.getInvitationById(invitationId);
         logger.info("Invitation returned successfully");

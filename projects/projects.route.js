@@ -5,8 +5,6 @@ const express = require("express");
 
 const Router = express.Router();
 
-
-//I have not tested the permissions yet
 Router.post("/", validateToken, createProject);
 Router.get("/", validateToken, getAllProjects);
 Router.get("/:id", validateToken, isMember, hasPermission("View Project"), getProjectById);

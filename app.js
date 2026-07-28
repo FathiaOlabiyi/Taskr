@@ -45,16 +45,6 @@ app.get("/homepage", (req, res) => {
     logger.info("Accessed Home Page")
     res.status(200).json("Welcome to Task/Project Management API Homepage")
 });
-
-// // admin routes
-// const rolesRoute = require("./Admin/roles.route");
-// const rolePermissionRoute = require("./Admin/role-permission.route");
-// app.use("/api/v1/admin/role", rolesRoute, rolePermissionRoute);
-
-// const permissionRoute = require("./Admin/permissions.route");
-// app.use("/api/v1/admin/permission", permissionRoute);
-
-
 //agenda
 
 const agenda = require("./config/agenda");
