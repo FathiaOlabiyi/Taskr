@@ -6,13 +6,13 @@ const express = require("express");
 const Router = express.Router();
 
 Router.post("/:id/invitation", validateToken, isMember, hasPermission("Manage Invitation"), createInvitation);
-Router.patch("/:id/invitation/:invitationId/send", validateToken, isMember, hasPermission("Manage Invitation"), sendInvitation);
+Router.post("/:id/invitation/:invitationId/send", validateToken, isMember, hasPermission("Manage Invitation"), sendInvitation);
 Router.get("/:id/invitation", getInvitation);
 Router.patch("/:id/invitation/accept", validateToken, acceptInvitation);
 Router.patch("/:id/invitation/reject", validateToken, rejectInvitation);
 Router.patch("/:id/invitation/:invitationId/revoke", validateToken, isMember, hasPermission("Manage Invitation"), revokeInvitation);
 Router.patch("/:id/invitation/:invitationId/reschedule", validateToken, isMember, hasPermission("Manage Invitation"), rescheduleInvitation);
-Router.patch("/:id/invitation/:invitationId/resend", validateToken, isMember, hasPermission("Manage Invitation"), resendInvitation);
+Router.post("/:id/invitation/:invitationId/resend", validateToken, isMember, hasPermission("Manage Invitation"), resendInvitation);
 Router.get("/:id/invitation/all", validateToken, isMember, hasPermission("Manage Invitation"), getInvitations);
 Router.get(
   "/:id/invitation/:invitationId",
