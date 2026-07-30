@@ -43,7 +43,7 @@ app.use((req, res, next) => {
 
 app.get("/homepage", (req, res) => {
     logger.info("Accessed Home Page")
-    res.status(200).json("Welcome to Task/Project Management API Homepage")
+    res.status(200).json("Welcome to Taskr Homepage")
 });
 //agenda
 
