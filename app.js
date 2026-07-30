@@ -74,4 +74,8 @@ const invitationRoute = require("./invitations/invitations.route");
 const memberRoute = require("./members/members.route");
 app.use("/api/v1/project", projectRoute, taskRoute, invitationRoute, memberRoute);
 
+const { swaggerUi, specs } = require("./swagger/swagger");
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+
 module.exports = app;
