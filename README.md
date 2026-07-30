@@ -43,7 +43,7 @@ Taskr combines these capabilities into a modular backend system that can serve a
 
 **Base API URL**
 
-https://taskr-api.onrender.com
+https://taskr-api.up.railway.app
 
 **API Documentation**
 
