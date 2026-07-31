@@ -9,6 +9,7 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
  *       - in: query
@@ -61,10 +62,12 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
  *       - in: path
  *         name: memberId
+ *         required: true
  *         schema:
  *           type: string
  *     security:
@@ -106,11 +109,13 @@
  *       - Member
  *     parameters:
  *       - in: path
+ *         required: true
  *         name: id
  *         schema:
  *           type: string
  *       - in: path
  *         name: memberId
+ *         required: true
  *         schema:
  *           type: string
  *     security:
@@ -132,6 +137,7 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
  *     security:

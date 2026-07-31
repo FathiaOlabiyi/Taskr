@@ -123,7 +123,7 @@ const acceptInvitation = async(req, res) => {
         await Services.acceptInvitation(token, userId, projectId);
         logger.info("Invitation accepted");
 
-        return res.status(201).json({
+        return res.status(200).json({
             message: "Invitation accepted"
         });
 
@@ -170,7 +170,7 @@ const rejectInvitation = async(req, res) => {
         await Services.rejectInvitation(token, userId, projectId);
         logger.info("Invitation has been rejected");
 
-        return res.status(201).json({
+        return res.status(200).json({
           message: "Invitation rejected",
         });
     }catch(err) {
@@ -211,7 +211,7 @@ const revokeInvitation = async(req, res) => {
         const response = await Services.revokeInvitation(invitationId, projectId);
         logger.info("Invitation revoked");
 
-        return res.status(201).json({
+        return res.status(200).json({
             message: "Invitation revoked"
         });
     }catch(err) {
@@ -264,7 +264,7 @@ const rescheduleInvitation = async(req, res) => {
         const response = await Services.rescheduleInvitation(invitationId, projectId, value);
         logger.info("Invitation rescheduled");
 
-        return res.status(201).json({
+        return res.status(200).json({
             message: "Invitation rescheduled",
             data: response
         });
@@ -419,7 +419,7 @@ const updateInvitation = async(req, res) => {
         const response = await Services.updateInvitation(projectId, invitationId, value);
         logger.info("Inivtation update successful");
 
-        return res.status(201).json({
+        return res.status(200).json({
             message: "Update successful",
             data: response
         });

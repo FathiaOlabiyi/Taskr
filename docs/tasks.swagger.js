@@ -9,6 +9,7 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
@@ -81,6 +82,7 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: query
@@ -161,10 +163,12 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: path
  *         name: memberId
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
@@ -215,10 +219,12 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: path
  *         name: taskId
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
@@ -264,10 +270,12 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: path
  *         name: taskId
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
@@ -332,10 +340,12 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: path
  *         name: taskId
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
@@ -393,10 +403,12 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: path
  *         name: taskId
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
@@ -419,10 +431,12 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: path
  *         name: taskId
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
@@ -483,10 +497,12 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: path
  *         name: taskId
+ *         required: true
  *         schema: 
  *           type: string
  *     security:

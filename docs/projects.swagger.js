@@ -132,6 +132,7 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       
@@ -177,6 +178,7 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       
@@ -239,6 +241,7 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       
@@ -297,6 +300,7 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       

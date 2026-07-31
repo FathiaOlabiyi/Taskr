@@ -9,6 +9,7 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
@@ -77,10 +78,12 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: path
  *         name: invitationId
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
@@ -131,10 +134,12 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: path
  *         name: invitationId
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
@@ -177,7 +182,7 @@
 // FETCH SENT INVITATION
 /**
  * @swagger
- * /api/v1/project/{id}/invitation/{token}:
+ * /api/v1/project/{id}/invitation:
  *   get:
  *     summary: Fetch sent invitation
  *     tags:
@@ -185,9 +190,10 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
- *       - in: path
+ *       - in: query
  *         name: token
  *         schema: 
  *           type: string
@@ -226,6 +232,7 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
@@ -277,10 +284,12 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: path
  *         name: invitationId
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
@@ -323,7 +332,7 @@
 // ACCEPT INVITATION
 /**
  * @swagger
- * /api/v1/project/{id}/invitation/accept/{token}:
+ * /api/v1/project/{id}/invitation/accept:
  *   patch:
  *     summary: Accept an invitation
  *     tags:
@@ -331,23 +340,25 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
- *       - in: path
+ *       - in: query
  *         name: token
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       201:
+ *       200:
  *         description: Invitation accepted
  */
 
 // REJECT INVITATION
 /**
  * @swagger
- * /api/v1/project/{id}/invitation/reject/{token}:
+ * /api/v1/project/{id}/invitation/reject:
  *   patch:
  *     summary: Reject an invitation
  *     tags:
@@ -355,16 +366,18 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: path
- *         name: token
+ *         name: query
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       201:
+ *       200:
  *         description: Invitation rejected
  */
 
@@ -379,16 +392,18 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: path
  *         name: invitationId
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       201:
+ *       200:
  *         description: Invitation revoked
  */
 
@@ -438,26 +453,20 @@
  *                 data:
  *                   type: object
  *                   properties:
- *                     invitation:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           projectId:
- *                             type: string
- *                           roleId:
- *                             type: string
- *                           inviteeEmail:
- *                             type: string
- *                           status:
- *                             type: string
- *                           invitedBy:
- *                             type: string
- *                           scheduleSend:
- *                             type: string
- *                           _id:
- *                             type: string
- *
+ *                     projectId:
+ *                       type: string
+ *                     roleId: 
+ *                       type: string
+ *                     inviteeEmail: 
+ *                       type: string
+ *                     status: 
+ *                       type: string
+ *                     invitedBy: 
+ *                       type: string
+ *                     scheduleSend: 
+ *                       type: string
+ *                     _id: 
+ *                       type: string
  */
 
 
@@ -465,7 +474,7 @@
 // UPDATE DRAFTED INVITATION
 /**
  * @swagger
- * /api/v1/project/{id}/invitation/{invitationId}/reschedule:
+ * /api/v1/project/{id}/invitation/{invitationId}:
  *   patch:
  *     summary: Update draft invitation
  *     tags:
@@ -473,10 +482,12 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: path
  *         name: invitationId
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
@@ -493,7 +504,7 @@
  *               inviteeEmail:
  *                 type: string
  *     responses:
- *       201:
+ *       200:
  *         description: Update successful
  *         content:
  *           application/json:
@@ -539,10 +550,12 @@
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema: 
  *           type: string
  *       - in: path
  *         name: invitationId
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
