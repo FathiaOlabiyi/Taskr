@@ -47,7 +47,7 @@ https://taskr-api.up.railway.app
 
 **API Documentation**
 
-https://taskr-api.onrender.com/api-docs
+https://taskr-api.up.railway.app/api-docs
 
 > **Note:** This project is a backend service. Use the base API URL together with the documented endpoints to interact with the application.
 
