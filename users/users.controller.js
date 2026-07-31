@@ -113,7 +113,7 @@ const removeProfilePicture = async(req, res) => {
         const response = await Services.removeProfilePicture(userId);
         logger.info("Profile picture removed");
 
-        return res.status(201).json({
+        return res.status(204).json({
             message: "Profile Picture removed"
         });
     }catch(err) {

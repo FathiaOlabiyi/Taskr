@@ -123,7 +123,7 @@ const acceptInvitation = async(req, res) => {
         await Services.acceptInvitation(token, userId, projectId);
         logger.info("Invitation accepted");
 
-        return res.status(200).json({
+        return res.status(201).json({
             message: "Invitation accepted"
         });
 
@@ -170,7 +170,7 @@ const rejectInvitation = async(req, res) => {
         await Services.rejectInvitation(token, userId, projectId);
         logger.info("Invitation has been rejected");
 
-        return res.status(200).json({
+        return res.status(201).json({
           message: "Invitation rejected",
         });
     }catch(err) {
@@ -212,8 +212,7 @@ const revokeInvitation = async(req, res) => {
         logger.info("Invitation revoked");
 
         return res.status(201).json({
-            message: "Invitation revoked",
-            data: response
+            message: "Invitation revoked"
         });
     }catch(err) {
         if(err && err.message.includes("not found")) {

@@ -212,7 +212,7 @@
  *     summary: Get a task by id
  *     tags:
  *       - Task
-  *     parameters:
+ *     parameters:
  *       - in: path
  *         name: id
  *         schema: 
@@ -382,7 +382,7 @@
  *                     
  */
 
-//DELETE A TASK
+//DELETE TASK
 /**
  * @swagger
  * /api/v1/project/{id}/task/{taskId}/delete:
@@ -403,7 +403,10 @@
  *       - bearerAuth: []
  *     responses:
  *       204:
- *         description: Deleted successfully
+ *         description: Task deleted successfully
+ *                     
+ */
+
 
 //ASSIGN A TASK
 /**

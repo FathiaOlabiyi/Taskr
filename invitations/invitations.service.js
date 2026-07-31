@@ -9,7 +9,7 @@ const mongoose = require("mongoose");
 const crypto = require("crypto");
 const agenda = require("../config/agenda");
 
-const createInvitation = async(projectId, {email, roleId, scheduleSend}, userId) => {
+const createInvitation = async(projectId, {inviteeEmail, roleId, scheduleSend}, userId) => {
   const getProjectStatus = await projectModel.findById(projectId);
 
   if (
@@ -21,7 +21,7 @@ const createInvitation = async(projectId, {email, roleId, scheduleSend}, userId)
 
   const existingInvitation = await Model.findOne({
     projectId,
-    inviteeEmail: email,
+    inviteeEmail,
     deletedAt: null,
     status: {
       $in: ["draft", "pending", "accepted", "scheduled"],
@@ -29,7 +29,7 @@ const createInvitation = async(projectId, {email, roleId, scheduleSend}, userId)
   });
 
   const getInviteeUserId = await authModel.findOne({
-    email,
+    inviteeEmail,
     deletedAt: null,
   });
   const inviteeUserId = getInviteeUserId._id;
@@ -48,7 +48,7 @@ const createInvitation = async(projectId, {email, roleId, scheduleSend}, userId)
   const findOwnerEmail = await authModel.findById(userId);
   const ownerEmail = findOwnerEmail.email;
 
-  if (email === ownerEmail) {
+  if (inviteeEmail === ownerEmail) {
     throw new Error("Email belongs to owner");
   }
 
@@ -100,7 +100,7 @@ const createInvitation = async(projectId, {email, roleId, scheduleSend}, userId)
   const createInvite = await Model.create({
     projectId,
     roleId,
-    inviteeEmail: email,
+    inviteeEmail,
     invitedBy: userMemberId,
     scheduleSend,
   });

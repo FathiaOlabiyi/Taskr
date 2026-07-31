@@ -1,7 +1,7 @@
 const joi = require("joi");
 
 const createInvitationJoi = joi.object({
-    email: joi.string().required(),
+    inviteeEmail: joi.string().required(),
     roleId: joi.string().required(),
     scheduleSend: joi.date().greater("now")
 });
