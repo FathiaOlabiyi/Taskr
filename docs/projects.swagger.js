@@ -251,7 +251,8 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required: true
+ *             required:
+ *               - status
  *             properties:
  *               status:
  *                 type: string
