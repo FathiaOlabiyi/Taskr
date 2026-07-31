@@ -173,7 +173,7 @@ const deleteProject = async(req, res) => {
     try {
         const response = await Services.deleteProject(id);
         logger.info("Project deleted successfully");
-        res.status(200).json({
+        res.status(204).json({
             message: "Project deleted successfully"
         });
     }catch(err){
