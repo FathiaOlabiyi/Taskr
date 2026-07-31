@@ -409,7 +409,7 @@ npm start
 |---------|----------|-------------|
 | POST | `/projects/:id/invitation` | Create invitation |
 | POST | `/projects/:id/invitation/:invitationId/send` | Send invitation |
-| GET | `/invitation/:token` | Validate invitation |
+| GET | `/invitation/:token` | Fetch sent invitation |
 | GET | `/invitation/all` | Fetch invitations |
 | GET | `/invitation/:invitationId` | Fetch invitation |
 | PATCH | `/invitation/:token/accept` | Accept invitation |
