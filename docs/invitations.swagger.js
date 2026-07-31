@@ -22,15 +22,16 @@
  *             type: object
  *             required:
  *               - inviteeEmail
- *               - roleId
+ *               - role
  *             properties:
  *               inviteeEmail:
  *                 type: string
- *               roleId:
+ *               role:
  *                 type: string
+ *                 enum: ["Project Manager", "Member", "Viewer"]
  *               scheduleSend:
  *                 type: string
- *                 format: date
+ *                 format: date-time
  *     responses:
  *       201:
  *         description: Invitation created successfully
@@ -195,6 +196,7 @@
  *           type: string
  *       - in: query
  *         name: token
+ *         required: true
  *         schema: 
  *           type: string
  *     security:
@@ -369,8 +371,8 @@
  *         required: true
  *         schema: 
  *           type: string
- *       - in: path
- *         name: query
+ *       - in: query
+ *         name: token
  *         required: true
  *         schema: 
  *           type: string
@@ -499,8 +501,9 @@
  *           schema:
  *             type: object
  *             properties:
- *               roleId:
+ *               role:
  *                 type: string
+ *                 enum: ["Project Manager", "Member", "Viewer"]
  *               inviteeEmail:
  *                 type: string
  *     responses:

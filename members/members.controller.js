@@ -138,7 +138,7 @@ const leaveProject = async(req, res) => {
         });
       }
 
-      if (err && err.message.includes("continue")) {
+      if (err && err.message.includes("continue") || err && err.message.includes("Owner")) {
         logger.warn(err.message);
         return res.status(409).json({
           message: err.message,

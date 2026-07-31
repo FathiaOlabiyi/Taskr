@@ -1,9 +1,9 @@
 const joi = require("joi");
 
 const createInvitationJoi = joi.object({
-    inviteeEmail: joi.string().required(),
-    roleId: joi.string().required(),
-    scheduleSend: joi.date().greater("now")
+  inviteeEmail: joi.string().required(),
+  role: joi.string().valid("Project Manager", "Member", "Viewer").required(),
+  scheduleSend: joi.date().greater("now"),
 });
 
 
@@ -12,7 +12,7 @@ const rescheduleInvitationJoi = joi.object({
 });
 
 const updateInvitationJoi = joi.object({
-    roleId: joi.string(),
+    role: joi.string().valid("Project Manager", "Member", "Viewer"),
     inviteeEmail: joi.string()
 });
 

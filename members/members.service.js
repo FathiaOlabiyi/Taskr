@@ -2,6 +2,7 @@ const Model = require("./members.model");
 const taskModel = require("../tasks/tasks.model");
 const roleModel = require("../Admin/roles.model");
 const mongoose = require("mongoose");
+const projectModel = require("../projects/projects.model");
 
 const getMembers = async(projectId, role) => {
     let query = {
@@ -86,7 +87,7 @@ const removeMember = async(userId, memberId, projectId) => {
   const roleName = getRoleName.name;
 
   if (roleName === "Owner") {
-    throw new Error("Forbidden");
+    throw new Error("Forbidden, cannot remove Project Owner");
   }
 
   if (callerRoleName === "Project Manager" && roleName === "Project Manager") {

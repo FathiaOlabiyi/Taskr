@@ -328,7 +328,7 @@ const deleteTask = async(projectId, userId, taskId) => {
     
     const getMemberId = await memberModel.find({ userId, projectId, deletedAt: null });
     const memberId = getMemberId._id;
-    getTask.deletedBy = memberId;
+    deleteTask.deletedBy = memberId;
     await deleteTask.save();
 };
 

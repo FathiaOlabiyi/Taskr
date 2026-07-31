@@ -16,7 +16,7 @@
  *         name: role
  *         schema:
  *           type: string
- *           enum: ["Owner", "Project_Manager", "Member", "Viewer"]
+ *           enum: ["Owner", "Project Manager", "Member", "Viewer"]
  *     security:
  *       - bearerAuth: []
  *     responses:

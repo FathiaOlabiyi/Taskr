@@ -9,7 +9,7 @@ const mongoose = require("mongoose");
 const crypto = require("crypto");
 const agenda = require("../config/agenda");
 
-const createInvitation = async(projectId, {inviteeEmail, roleId, scheduleSend}, userId) => {
+const createInvitation = async(projectId, {inviteeEmail, role, scheduleSend}, userId) => {
   const getProjectStatus = await projectModel.findById(projectId);
 
   if (
@@ -29,20 +29,29 @@ const createInvitation = async(projectId, {inviteeEmail, roleId, scheduleSend}, 
   });
 
   const getInviteeUserId = await authModel.findOne({
-    inviteeEmail,
+    email: inviteeEmail,
     deletedAt: null,
   });
-  const inviteeUserId = getInviteeUserId._id;
 
-  const checkMembership = await memberModel.findOne({
-    projectId,
-    deletedAt: null,
-    userId: inviteeUserId,
-  });
+  if(getInviteeUserId) {
+      const inviteeUserId = getInviteeUserId._id;
 
-  if (existingInvitation && checkMembership) {
-    throw new Error("An active invitation already exists for this email");
-  }
+      const checkMembership = await memberModel.findOne({
+        projectId,
+        deletedAt: null,
+        userId: inviteeUserId,
+      });
+
+      if (checkMembership) {
+        throw new Error(
+          "This email is already a member",
+        );
+      }
+  };
+
+  if(existingInvitation) {
+    throw new Error("This email already has an existing invitation")
+  };
 
   //check if email is not owner's email
   const findOwnerEmail = await authModel.findById(userId);
@@ -50,10 +59,6 @@ const createInvitation = async(projectId, {inviteeEmail, roleId, scheduleSend}, 
 
   if (inviteeEmail === ownerEmail) {
     throw new Error("Email belongs to owner");
-  }
-
-  if (!mongoose.Types.ObjectId.isValid(roleId)) {
-    throw new Error("Invalid role ID format");
   }
 
   //get caller's role
@@ -66,16 +71,18 @@ const createInvitation = async(projectId, {inviteeEmail, roleId, scheduleSend}, 
   const callerRole = await roleModel.findById(callerRoleId);
   const callerRoleName = callerRole.name;
 
-  const findRole = await roleModel.findById(roleId);
+  const findRole = await roleModel.findOne({name: role});
   if (!findRole || findRole.deletedAt !== null) {
     throw new Error("Role not found");
-  }
+  };
 
-  if (findRole.name === "Owner") {
+  const roleId = findRole._id;
+
+  if (role === "Owner") {
     throw new Error("Not allowed");
   }
 
-  if (findRole.name === "Project Manager") {
+  if (role === "Project Manager") {
     if (callerRoleName === "Project Manager") {
       throw new Error("Not allowed");
     }
@@ -364,13 +371,14 @@ const rescheduleInvitation = async(invitationId, projectId, {scheduleSend}) => {
   };
 
   if (
-    getInvitation.status !== "scheduled" && getInvitation.status !== "draft"
+    getInvitation.status !== "scheduled" &&
+    getInvitation.status !== "draft"
   ) {
     throw new Error("Invitation cannot be rescheduled");
   }
 
   getInvitation.scheduleSend = scheduleSend;
-  getInvitation.status = "scheduled;"
+  getInvitation.status = "scheduled"
   await getInvitation.save();
 
   await agenda.schedule(scheduleSend, "send invitation", {invitationId: getInvitation._id});      
@@ -451,7 +459,7 @@ const getInvitationById = async(invitationId) => {
   return getInvitation;
 };
 
-const updateInvitation = async(projectId, invitationId, {roleId, inviteeEmail}) => {
+const updateInvitation = async(projectId, invitationId, {role, inviteeEmail}) => {
 
   const getProjectStatus = await projectModel.findById(projectId);
 
@@ -478,16 +486,18 @@ const updateInvitation = async(projectId, invitationId, {roleId, inviteeEmail}) 
     throw new Error("Invitation cannot be updated");
   }
 
-  const findRole = await roleModel.findById(roleId);
+  const findRole = await roleModel.findOne({name: role});
+  const roleId = findRole._id;
+
   if (!findRole || findRole.deletedAt !== null) {
     throw new Error("Role not found");
   }
 
-  if (findRole.name === "Owner") {
+  if (role === "Owner") {
     throw new Error("Not allowed");
   }
 
-  if (findRole.name === "Project Manager") {
+  if (role === "Project Manager") {
     const projectManager = await memberModel.find({projectId, role: roleId, deletedAt: null});
 
     if (projectManager.length >= 5) {

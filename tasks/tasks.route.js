@@ -13,6 +13,6 @@ Router.patch("/:id/task/:taskId", validateToken, isMember, hasPermission("Manage
 Router.patch("/:id/task/:taskId/status", validateToken, isMember, hasPermission("Manage Task"), updateStatus);
 Router.patch("/:id/task/:taskId/delete", validateToken, isMember, hasPermission("Delete Task"), deleteTask);
 Router.patch("/:id/task/:taskId/assign", validateToken, isMember, hasPermission("Assign Task"), assignTask);
-Router.patch("/:id/task/:taskId/unassign", validateToken, isMember, hasPermission("Assign Tasks"), unassignTask);
+Router.patch("/:id/task/:taskId/unassign", validateToken, isMember, hasPermission("Assign Task"), unassignTask);
 
 module.exports = Router;

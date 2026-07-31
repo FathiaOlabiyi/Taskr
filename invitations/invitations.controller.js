@@ -2,6 +2,7 @@ const Services = require("./invitations.service");
 const joi = require("./invitations.middleware");
 const logger = require("../logger/winston");
 
+
 const createInvitation = async(req, res) => {
     try {
     const projectId = req.params.id;
@@ -23,7 +24,7 @@ const createInvitation = async(req, res) => {
     });
 
     }catch(err) {
-        if(err && [err.message.includes("Invitation") || err.message.includes("allowed") || err.message.includes("belongs")] || err.message.includes("continue")) {
+        if(err && [err.message.includes("Invitation") || err.message.includes("allowed") || err.message.includes("belongs")] || err.message.includes("continue") || err.message.includes("already")) {
             logger.warn(err.message);
             return res.status(409).json({
                 message: err.message
@@ -182,13 +183,7 @@ const rejectInvitation = async(req, res) => {
       }
 
       if (
-        err && [
-          err.message.includes("expired") ||
-            err.message.includes("yours") ||
-            err.message.includes("valid") ||
-            err.message.includes("continue")
-        ]
-      ) {
+        err && [err.message.includes("expired") || err.message.includes("yours") || err.message.includes("valid") || err.message.includes("continue")]) {
         logger.warn(err.message);
         return res.status(409).json({
           message: err.message,

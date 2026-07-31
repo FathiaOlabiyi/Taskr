@@ -74,6 +74,7 @@
  *         name: status
  *         schema: 
  *           type: string
+ *           enum: ["planning", "active", "on_hold", "completed"]
  *       
  *       - in: query
  *         name: type

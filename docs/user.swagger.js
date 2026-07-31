@@ -77,9 +77,9 @@
  *           schema:
  *             type: object
  *             required:
- *               - profilePicture
+ *               - profile_picture
  *             properties:
- *               profilePicture:
+ *               profile_picture:
  *                 type: string
  *                 format: binary
  *     responses:

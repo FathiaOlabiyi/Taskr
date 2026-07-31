@@ -359,7 +359,7 @@
  *             required:
  *               - status
  *             properties:
- *               title:
+ *               status:
  *                 type: string
  *                 enum: ["todo", "in-progress", "on-hold", "review", "completed"]
  *     responses:
