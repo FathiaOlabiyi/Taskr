@@ -14,10 +14,26 @@ const options = {
         url: "http://localhost:3200",
       },
     ],
+
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
+
   apis: ["./docs/*.js"],
 };
-
 const specs = swaggerJsdoc(options);
 
 module.exports = {

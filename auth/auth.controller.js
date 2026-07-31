@@ -266,14 +266,7 @@ const resetPassword = async(req, res) => {
 };
 
 const deleteAccount = async(req, res) => {
-    const userId = req.params.userId;
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-        logger.warn("Invalid ID format");
-        return res.status(400).json({
-            message: "Invalid ID format",
-        });
-    }
+    const userId = req.user.id;
 
     try {
         const deleteUser = await Services.deleteAccount(userId);

@@ -12,7 +12,7 @@ router.post("/resend-verification", Controllers.resendEmailVerificationLink);
 router.post("/signin", Controllers.signIn); 
 router.post("/forgot-password", Controllers.forgotPassword); 
 router.post("/reset-password", Controllers.resetPassword);
-router.patch("/:userId/delete-account", Middlewares.validateToken, Controllers.deleteAccount); 
+router.patch("/delete-account", Middlewares.validateToken, Controllers.deleteAccount); 
 
 //OAuth
 const logger = require("../logger/winston");

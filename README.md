@@ -359,7 +359,7 @@ npm start
 | POST | `/auth/reset-password/:token` | Reset password |
 | GET | `/auth/verify-email/:token` | Verify email |
 | POST | `/auth/resend-verification` | Resend verification email |
-| PATCH | `/auth/:userId/delete-account` | Delete account |
+| PATCH | `/auth/delete-account` | Delete account |
 
 ---
 
