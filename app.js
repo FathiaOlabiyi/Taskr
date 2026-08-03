@@ -41,7 +41,7 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get("/homepage", (req, res) => {
+app.get("/", (req, res) => {
     logger.info("Accessed Home Page")
     res.status(200).json("Welcome to Taskr Homepage")
 });
