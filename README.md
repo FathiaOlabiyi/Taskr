@@ -301,31 +301,31 @@ npm install
 Create a `.env` file.
 
 ```env
-PORT=
+PORT=5000
 
-MONGODB_URI=
+MONGODB_URI=your_mongodb_uri
 
-JWT_SECRET=
+JWT_SECRET=your_jwt_secret
 
-GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_ID=your_google-client_id
 
-GOOGLE_CLIENT_SECRET=
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 
-FRONTEND_URL=
+FRONTEND_URL=your_frontend_url
 
-APP_URL=
+APP_URL=your_app_url
 
-EMAIL_USER=
+EMAIL_USER=user_email_user
 
-EMAIL_PASS=
+EMAIL_PASS=your_email_password
 
-CLOUDINARY_URL=
+CLOUDINARY_URL=your_cloudinary_url
 
-CLOUD_NAME=
+CLOUD_NAME=your_cloudinary_cloud_name
 
-API_KEY=
+API_KEY=your_cloudinary_api_key
 
-API_SECRET=
+API_SECRET=your_cludinary_api_secret
 ```
 
 ---
