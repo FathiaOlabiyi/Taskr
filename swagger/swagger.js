@@ -12,11 +12,9 @@ const options = {
     servers: [
       {
         url: "https://taskr-api.up.railway.app",
-        description: Production
       },
       {
-        url: http://localhost:3200,
-        description: Local Development
+        url: "http://localhost:3200"
       }
     ],
 
